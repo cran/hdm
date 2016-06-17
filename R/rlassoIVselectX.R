@@ -7,9 +7,9 @@
 #'
 #' The implementation is a special case of of Chernozhukov et al. (2015).
 #' The option \code{post=TRUE} conducts post-lasso estimation for the Lasso estimations, i.e. a refit of the
-#' model with the selected variables. If variables of the exogenous variables in
-#' \code{x} should be used as instruments, they have to be added to the
-#' instrument set \code{z} explicitly.
+#' model with the selected variables. Exogenous variables 
+#' \code{x} are automatically used as instruments and added to the
+#' instrument set \code{z}.
 #'
 #' @param x exogenous variables in the structural equation (matrix)
 #' @param d endogenous variables in the structural equation (vector or matrix)
@@ -24,10 +24,24 @@
 #' @references Chernozhukov, V., Hansen, C. and M. Spindler (2015). Post-Selection and Post-Regularization Inference in Linear
 #' Models with Many Controls and Instruments
 #' \emph{American Economic Review, Papers and Proceedings} 105(5), 486--490.
-#' @keywords Instrumental Variables Lasso Hig-dimensional setting
+#' @examples
+#' library(hdm)
+#' data(AJR); y = AJR$GDP; d = AJR$Exprop; z = AJR$logMort
+#' x = model.matrix(~ -1 + (Latitude + Latitude2 + Africa + 
+#'                            Asia + Namer + Samer)^2, data=AJR)
+#' dim(x)
+#'   #AJR.Xselect = rlassoIV(x=x, d=d, y=y, z=z, select.X=TRUE, select.Z=FALSE)
+#'   AJR.Xselect = rlassoIV(GDP ~ Exprop +  (Latitude + Latitude2 + Africa + Asia + Namer + Samer)^2 |
+#'              logMort +  (Latitude + Latitude2 + Africa + Asia + Namer + Samer)^2,
+#'              data=AJR, select.X=TRUE, select.Z=FALSE)
+#' summary(AJR.Xselect)
+#' confint(AJR.Xselect)
+rlassoIVselectX <- function(x, ...)
+  UseMethod("rlassoIVselectX") # definition generic function
+
 #' @export
 #' @rdname rlassoIVselectX
-rlassoIVselectX <- function(x,d,y,z, post=TRUE, ...) {
+rlassoIVselectX.default <- function(x,d,y,z, post=TRUE, ...) {
   d <- as.matrix(d)
   z <- as.matrix(z)
   if (is.null(colnames(d))) colnames(d) <- paste("d", 1:ncol(d), sep="")
@@ -39,19 +53,37 @@ rlassoIVselectX <- function(x,d,y,z, post=TRUE, ...) {
   lasso.d.x <- rlasso(d ~ x, post=post, ...)
   Dr <- d - predict(lasso.d.x, newdata=x)
   lasso.y.x <- rlasso(y ~ x, post=post, ...)
-  Yr <- y - predict(lasso.y.x, newdata=x)
+  Yr <- y - predict(lasso.y.x)
   Zr <- matrix(NA, nrow=n, ncol=numIV)
   for (i in seq(length.out=numIV)) {
   lasso.z.x <- rlasso(z[,i] ~ x, post=post, ...)
-  Zr[,i] <- z - predict(lasso.z.x, newdata=x)
+  Zr[,i] <- z[,i] - predict(lasso.z.x)
   }
-  result <- tsls(Yr,Dr,x=NULL,Zr, intercept=FALSE)
+  result <- tsls(y = Yr,d = Dr,x=NULL, z = Zr, intercept=FALSE)
   coef <- as.vector(result$coefficient)
   se <- diag(sqrt(result$vcov))
   vcov <- result$vcov
   names(coef) <- names(se) <- colnames(d)
   res <- list(coefficients=coef, se=se, vcov=vcov, call=match.call(), samplesize=n)
   class(res) <- "rlassoIVselectX"
+  return(res)
+}
+
+
+#' @rdname rlassoIVselectX
+#' @export
+#' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+#' d endogenous variable, z instrumental variables, and x exogenous variables.
+#' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIVselectX} is called.
+rlassoIVselectX.formula <- function(formula, data, post=TRUE, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
+  res <- rlassoIVselectX(x=x, d=d, y=y, z=z, post=post, ...)
+  res$call <- match.call()
   return(res)
 }
 
@@ -70,7 +102,6 @@ rlassoIVselectX <- function(x,d,y,z, post=TRUE, ...) {
 #' @param ... arguments passed to the print function and other methods
 #' @param parm a specification of which parameters are to be given confidence intervals, either a vector of numbers or a vector of names. If missing, all parameters are considered.
 #' @param level	the confidence level required.
-#' @keywords methods rlassoIVselectX
 #' @rdname methods.rlassoIVselectX
 #' @aliases methods.rlassoIVselectX print.rlassoIVselectX summary.rlassoIVselectX
 #' @export
@@ -129,7 +160,8 @@ confint.rlassoIVselectX <- function(object, parm, level=0.95, ...) {
   pct <- format.perc(a, 3)
   ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm,
                                                              pct))
-  ses <- sqrt(diag(object$vcov))[parm]
+  #ses <- sqrt(diag(object$vcov))[parm]
+  ses <- object$se[parm]
   ci[] <- cf[parm] + ses %o% fac
   print(ci)
   invisible(ci)

@@ -1,24 +1,33 @@
 Package: hdm
 Type: Package
 Title: High-Dimensional Metrics
-Version: 0.1.0
-Date: 2016-01-31
+Version: 0.2.0
+Date: 2016-06-14
 Authors@R: c(person("Martin", "Spindler", email="spindler@mea.mpisoc.mpg.de", role=c("cre", "aut")), person("Victor", "Chernozhukov", role="aut"), person("Christian", "Hansen", role="aut"))
 Depends: R (>= 3.0.0)
-Description: Implementation of selected high-dimensional statistical and econometric methods for estimation and inference. Efficient estimators and  uniformly valid confidence intervals for various low-dimensional causal/structural parameters are provided which appear in high-dimensional approximately sparse models. Including functions for fitting heteroscedastic robust Lasso regressions with non-Gaussian errors and for instrumental variable (IV) and treatment effect estimation in a high-dimensional setting. Moreover, the methods enable valid post-selection inference and rely on a theoretically grounded, data-driven choice of the penalty.
+Description: Implementation of selected high-dimensional statistical and
+    econometric methods for estimation and inference. Efficient estimators and
+    uniformly valid confidence intervals for various low-dimensional causal/
+    structural parameters are provided which appear in high-dimensional
+    approximately sparse models. Including functions for fitting heteroscedastic
+    robust Lasso regressions with non-Gaussian errors and for instrumental variable
+    (IV) and treatment effect estimation in a high-dimensional setting. Moreover,
+    the methods enable valid post-selection inference and rely on a theoretically
+    grounded, data-driven choice of the penalty.
 License: GPL-3
 LazyData: TRUE
-Imports: MASS, glmnet, ggplot2, checkmate
+Imports: MASS, glmnet, ggplot2, checkmate, Formula, methods
 Suggests: testthat, knitr, xtable
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
 Author: Martin Spindler [cre, aut],
   Victor Chernozhukov [aut],
   Christian Hansen [aut]
 Maintainer: Martin Spindler <spindler@mea.mpisoc.mpg.de>
 Repository: CRAN
 Repository/R-Forge/Project: hdm
-Repository/R-Forge/Revision: 76
-Repository/R-Forge/DateTimeStamp: 2016-02-01 21:18:10
-Date/Publication: 2016-02-02 11:52:02
+Repository/R-Forge/Revision: 107
+Repository/R-Forge/DateTimeStamp: 2016-06-17 17:57:22
+Date/Publication: 2016-06-17 21:46:27
 NeedsCompilation: no
-Packaged: 2016-02-01 21:30:47 UTC; rforge
+Packaged: 2016-06-17 18:26:07 UTC; rforge

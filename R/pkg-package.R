@@ -27,8 +27,6 @@
 #' @references A. Belloni, V. Chernozhukov, C. Hansen (2014). Inference on
 #' treatment effects after selection among high-dimensional controls. The
 #' Review of Economic Studies 81(2), 608-650.
-#' @keywords package Lasso Instrumental Variables Endogeneity Microeconometrics
-#' Program Evaluation treatment effects
 #' @importFrom stats binomial
 #' @importFrom stats coef
 #' @importFrom stats confint 
@@ -48,6 +46,13 @@
 #' @importFrom stats rnorm
 #' @importFrom stats var
 #' @importFrom stats vcov
+#' @importFrom stats as.formula
+#' @importFrom stats contrasts
+#' @importFrom stats formula
+#' @importFrom stats terms
+#' @importFrom stats update
+#' @importFrom Formula model.part
+#' @importFrom methods is
 NULL
 
 #' Growth data set
@@ -68,7 +73,8 @@ NULL
 #' @name Growth Data
 #' @aliases Growth Example GrowthData GDP
 #' @docType data
-#' @format \describe{Dataframe with the following variables:
+#' @format Dataframe with the following variables:
+#' \describe{
 #' \item{outcome}{dependent variable: national growth rates in GDP per capita
 #' for the periods 1965-1975 and 1975-1985}
 #' \item{x}{covariates which might influence growth}}
@@ -99,7 +105,7 @@ NULL
 #' @name pension
 #' @aliases 401(k) plans wealth data pension
 #' @docType data
-#' @format \describe{Dataframe with the following variables (amongst others):
+#' @format Dataframe with the following variables (amongst others): \describe{
 #' \item{p401}{participation in 401(k)}
 #' \item{e401}{eligibility for 401(k)}
 #' \item{a401}{401(k) assets}
@@ -185,3 +191,61 @@ NULL
 #' data(EminentDomain)
 NULL
 
+#' BLP data set
+#'
+#' Automobile data set from the US.
+#'
+#' Data set was analysed in Berry, Levinsohn and Pakes (1995). The data stem from annual issues of the Automotive News Market Data Book. 
+#' The data set inlcudes information on all models marketed during the the periord beginning 1971 and ending in 1990 cotaining 2217 model/years from 997 distinct models.
+#' A detailed description is given in BLP (1995, 868--871). The internal function \code{constructIV} constructs instrumental variables along the lines described and used in BLP (1995).
+#'
+#' @name BLP
+#' @docType data
+#' @format \describe{ 
+#' \item{model.name}{model name}
+#' \item{model.id}{model id}
+#' \item{firm.id}{firm id}
+#' \item{cdid}{cdid}
+#' \item{id}{id}
+#' \item{price}{log price}
+#' \item{mpg}{miles per gallon}
+#' \item{mpd}{miles per dollar}
+#' \item{hpwt}{horse power per weight}
+#' \item{air}{air conditioning (binary variable)}
+#' \item{space}{size of the car}
+#' \item{share}{market share}
+#' \item{outshr}{share s0}
+#' \item{y}{outcome variable defined as log(share) - log(outshr) }
+#' \item{trend}{time trend}
+#' }
+#' @references S. Berry, J. Levinsohn, A. Pakes (1995). Automobile Prices in Market EquilibriumD. Econometrica, 63(4), 841--890.
+#' @keywords datasets
+#' @examples
+#' data(BLP)
+NULL
+
+#' cps2012 data set
+#'
+#' Census data from the US for the year 2012.
+#'
+#' The CPS is a monthly U.S. household survey conducted jointly by the U.S. Census Bureau and the Bureau of Labor Statistics. The data comprise the year 2012. 
+#' This data set was used in Mulligan and Rubinstein (2008). 
+#' The sample comprises white non-hipanic, ages 25-54, working full time full year (35+ hours per week at least 50 weeks), exclude living in group quarters, 
+#'  self-employed, military, agricultural, and private household sector, allocated earning, inconsistent report on earnings and employment, missing data.
+#' @name cps2012
+#' @docType data
+#' @format \describe{ 
+#' \item{lnw}{log of hourly wage (annual earnings / annual hours)}
+#' \item{female}{female indicator}
+#' \item{married status}{ six indicators: widowed, divorced, separated, nevermarried, and married (omitted)}
+#' \item{education attainment}{six indicators: hsd08, hsd911, hsg, cg, ad, and sc (omitted)}
+#' \item{region indicators}{four indicators: mw, so, we, and ne (omitted)}
+#' \item{potential experience}{(max[0, age - years of education - 7]): exp1, exp2 (divided by 100), exp3 (divided by 1000), exp4 (divided by 10000)}
+#' \item{weight}{March Supplement sampling weight}
+#' \item{year}{CPS year}
+#' }
+#' @references  C. B. Mulligan and Y. Rubinstein (2008). Selection, investment, and women's relative wages over time. The Quarterly Journal of Economics, 1061--1110.
+#' @keywords datasets
+#' @examples
+#' data(BLP)
+NULL

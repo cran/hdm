@@ -13,17 +13,18 @@
 #' @param z instruments
 #' @param intercept logical, if intercept should be included
 #' @param homoscedastic logical, if homoscedastic (\code{TRUE}, default) or heteroscedastic erros (\code{FALSE}) should be calculated.
+#' @param ... further arguments (only for consistent defintion of methods)
 #' @return The function returns a list with the following elements \item{coefficients}{coefficients}
 #' \item{vcov}{variance-covariance matrix} \item{residuals}{outcome minus predicted values} \item{call}{function call} \item{samplesize}{sample size}
 #' \item{se}{standard error}
-#' @keywords Instrumental Variables
-#' @keywords Endogeneity
-#' @keywords 2SLS
-#' @keywords TSLS
+#' @rdname tsls
 #' @export
+tsls <- function(x, ...)
+  UseMethod("tsls") # definition generic function
 
-
-tsls <- function(y, d, x, z, intercept=TRUE, homoscedastic=TRUE) {
+#' @rdname tsls
+#' @export
+tsls.default <- function(x, d, y, z, intercept=TRUE, homoscedastic=TRUE, ...) {
   n <- length(y)
   
   d <- as.matrix(d)
@@ -35,11 +36,11 @@ tsls <- function(y, d, x, z, intercept=TRUE, homoscedastic=TRUE) {
   
   if (intercept==TRUE && is.null(x)) {
     x <- as.matrix(rep(1,n))
-    colnames(x) <- "Intercept"
+    colnames(x) <- "(Intercept)"
   } else {
     if (intercept==TRUE) {
       x <- as.matrix(cbind(1,x))
-      colnames(x)[1] <- "Intercept"
+      colnames(x)[1] <- "(Intercept)"
     }
   }
   
@@ -60,14 +61,17 @@ tsls <- function(y, d, x, z, intercept=TRUE, homoscedastic=TRUE) {
 
   Mxz <- t(X) %*% Z
   Mzz <- solve(t(Z) %*% Z)
+  #Mzz <- MASS::ginv(t(Z) %*% Z)
   M <- solve(Mxz %*% Mzz %*% t(Mxz))
-
+  #M <- MASS::ginv(Mxz %*% Mzz %*% t(Mxz))
+  
   b <- M %*% Mxz %*% Mzz %*% (t(Z) %*% y)
   #Dhat <- Z %*% solve(t(Z) %*% Z) %*% t(Z) %*% X
   #b2 <- MASS::ginv(t(Dhat) %*% X) %*% (t(Dhat) %*% y)
   if (homoscedastic==TRUE) {
   e <- y - X %*% b
-  VC1 <- as.numeric((t(e) %*% e/(n - k))) * M
+  #VC1 <- as.numeric((t(e) %*% e/(n - k))) * M
+  VC1 <- as.numeric((sum(e^2)/(n - k))) * M
   }
   if (homoscedastic==FALSE) {
     e <- y - X %*% b
@@ -83,6 +87,24 @@ tsls <- function(y, d, x, z, intercept=TRUE, homoscedastic=TRUE) {
   return(res)
 }
 
+
+#' @rdname tsls
+#' @export
+#' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+#' d endogenous variable, z instrumental variables, and x exogenous variables.
+#' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{tsls} is called.
+tsls.formula <- function(formula, data, intercept=TRUE, homoscedastic=TRUE, ...) {
+  if (missing(data))  data <- environment(formula)
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
+  res <- tsls(y=y, d=d, x=x, z=z, intercept=intercept, homoscedastic=homoscedastic)
+  res$call <- match.call()
+  return(res)
+}
 ################# Methods for tsls
 
 #' Methods for S3 object \code{tsls}
@@ -93,7 +115,6 @@ tsls <- function(y, d, x, z, intercept=TRUE, homoscedastic=TRUE) {
 #' @param x an object of class \code{tsls}
 #' @param digits significant digits in printout
 #' @param ... arguments passed to the print function and other methods
-#' @keywords methods tsls
 #' @rdname methods.tsls
 #' @aliases methods.tsls print.tsls summary.tsls
 #' @export

@@ -13,17 +13,21 @@
 #' variables of x which should be used as treatment variables.
 #' @param I3 logical vector with same length as the number of controls;
 #' indicates if variables (TRUE) should be included in any case.
+#' @param post logical. If \code{TRUE}, post-Lasso estimation is conducted.
 #' @param \dots additional parameters
 #' @return The function returns an object of class \code{rlassologitEffects} with the following entries: \item{coefficients}{estimated
 #' value of the coefficients} \item{se}{standard errors}
 #' \item{t}{t-statistics} \item{pval}{p-values} \item{samplesize}{sample size of the data set} \item{I}{index of variables of the union of the lasso regressions}
 #' @references A. Belloni, V. Chernozhukov, Y. Wei (2013). Honest confidence regions for a regression parameter in logistic regression with a loarge number of controls.
 #' cemmap working paper CWP67/13.
-#' @keywords Estimation Inference Logistic Lasso
 #' @export
 #' @rdname rlassologitEffects
+rlassologitEffects <- function(x, ...)
+  UseMethod("rlassologitEffects") # definition generic function
+
 #' @export
-rlassologitEffects <- function(x, y, index = c(1:ncol(x)), I3 = NULL, ...) {
+#' @rdname rlassologitEffects
+rlassologitEffects.default <- function(x, y, index = c(1:ncol(x)), I3 = NULL, post = TRUE, ...) {
   if (is.logical(index)) {
     k <- p1 <- sum(index)
   } else {
@@ -69,7 +73,7 @@ rlassologitEffects <- function(x, y, index = c(1:ncol(x)), I3 = NULL, ...) {
     d <- x[, index[i], drop = FALSE]
     Xt <- x[, -index[i], drop = FALSE]
     I3m <- I3[-index[i]]
-    lasso.regs[[i]] <- try(col <- rlassologitEffect(Xt, y, d, I3 = I3m))
+    lasso.regs[[i]] <- try(col <- rlassologitEffect(Xt, y, d, I3 = I3m, post = post))
     if (class(lasso.regs[[i]]) == "try-error") {
       next
     } else {
@@ -77,23 +81,58 @@ rlassologitEffects <- function(x, y, index = c(1:ncol(x)), I3 = NULL, ...) {
       se[i] <- col$se
       t[i] <- col$t
       pval[i] <- col$pval
-      # reside[,i] <- col$residuals$epsilon residv[,i] <- col$residuals$v
+      reside[,i] <- col$residuals$epsilon
+      residv[,i] <- col$residuals$v
     }
   }
   residuals <- list(e = reside, v = residv)
   res <- list(coefficients = coefficients, se = se, t = t, pval = pval, 
               lasso.regs = lasso.regs, index = I, call = match.call(), samplesize = n, 
               residuals = residuals)
-  class(res) <- "rlassologitEffects"
+  class(res) <- c("rlassologitEffects")
   return(res)
 }
 
 
 #' @rdname rlassologitEffects
+#' @export
+#' @param formula An element of class \code{formula} specifying the linear model.
+#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
+#' @param I An one-sided formula specifying the variables for which inference is conducted.
+#' @param included One-sided formula of variables which should be included in any case.
+rlassologitEffects.formula  <- function(formula, data, I,  
+                          included = NULL, post = TRUE, ...) {
+  cl <- match.call()
+  if (missing(data))  data <- environment(formula)
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1L]] <- quote(stats::model.frame)
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  attr(mt, "intercept") <- 1
+  y <- model.response(mf, "numeric")
+  n <- length(y)
+  x <- model.matrix(mt, mf)[,-1, drop=FALSE]
+  cn <- attr(mt, "term.labels")
+  try(if (is.matrix(eval(parse(text=cn)))) cn <- colnames(eval(parse(text=cn))), silent = TRUE)
+  I.c <- check_variables(I, cn)
+  I3 <- check_variables(included, cn)
+  
+  if (length(intersect(I.c, I3) != 0)) 
+    stop("I and included should not contain the same variables!")
+  
+  est <- rlassologitEffects(x, y, index = I.c, I3 = I3, post = post, ...)
+  est$call <- cl
+  return(est)
+}
+
+#' @rdname rlassologitEffects
 #' @param d variable for which inference is conducted (treatment variable)
 #' @export
-#'
-rlassologitEffect <- function(x, y, d, I3 = NULL) {
+rlassologitEffect <- function(x, y, d, I3 = NULL, post = TRUE) {
   d <- as.matrix(d, ncol = 1)
   y <- as.matrix(y, ncol = 1)
   kx <- p <- dim(x)[2]
@@ -105,7 +144,8 @@ rlassologitEffect <- function(x, y, d, I3 = NULL) {
   # Step 1
   la1 <- 1.1/2 * sqrt(n) * qnorm(1 - 0.05/(max(n, (p + 1) * log(n))))
   dx <- cbind(d, x)
-  l1 <- rlassologit(y ~ dx, post = TRUE, intercept = TRUE, penalty = list(lambda.start = la1))
+  l1 <- rlassologit(y ~ dx, post = post, intercept = TRUE, penalty = list(lambda.start = la1))
+  xi <- l1$residuals
   t <- predict(l1, type = "link", newdata = dx)
   sigma2 <- exp(t)/(1 + exp(t))^2
   w <- sigma2  #exp(t)/(1+exp(t))^2
@@ -115,7 +155,7 @@ rlassologitEffect <- function(x, y, d, I3 = NULL) {
   la2 <- rep(2.2 * sqrt(n) * qnorm(1 - 0.05/(max(n, p * log(n)))), p)
   xf <- x * as.vector(f)
   df <- d * f
-  l2 <- rlasso(xf, df, post = TRUE, intercept = TRUE, penalty = list(homoscedastic = "none", 
+  l2 <- rlasso(xf, df, post = post, intercept = TRUE, penalty = list(homoscedastic = "none", 
                                                                      lambda.start = la2, c = 1.1, gamma = 0.1))
   I2 <- l2$index
   z <- l2$residual/sqrt(sigma2)
@@ -132,7 +172,7 @@ rlassologitEffect <- function(x, y, d, I3 = NULL) {
   la3 <- 1.1/2 * sqrt(n) * qnorm(1 - 0.05/(max(n, (p3 + 1) * log(n))))
   l3 <- rlassologit(cbind(d, xselect), y, post = TRUE, normalize = TRUE, 
                     intercept = TRUE, penalty = list(lambda.start = la3))
-  alpha <- l3$coefficients[1]
+  alpha <- l3$beta[1]
   t3 <- predict(l3, type = "link", newdata = cbind(d, xselect))
   G3 <- exp(t3)/(1 + exp(t3))
   w3 <- G3 * (1 - G3)
@@ -157,9 +197,13 @@ rlassologitEffect <- function(x, y, d, I3 = NULL) {
   }
   # return(list(alpha=unname(alpha), se=drop(se), t=unname(tval),
   # pval=unname(pval), coefficients=coef(l3), residuals=l3$residuals))
-  results <- list(alpha = alpha, se = drop(se), t = tval, pval = pval, 
+  res <- list(epsilon= l3$residuals, v= z)
+  se <- drop(se)
+  names(se) <- colnames(d)
+  results <- list(alpha = alpha, se = se, t = tval, pval = pval, 
                   no.selected = no.selected, coefficients = alpha, coefficient = alpha, 
-                  residuals = l3$residuals, call = match.call(), samplesize = n)
+                  residuals = res, call = match.call(), samplesize = n, post = post)
+  class(results) <- c("rlassologitEffects")
   return(results)
 }
 
@@ -177,7 +221,6 @@ rlassologitEffect <- function(x, y, d, I3 = NULL) {
 #' @param x an object of class \code{rlassologitEffects}
 #' @param digits number of significant digits in printout
 #' @param ... arguments passed to the print function and other methods
-#' @keywords methods rlassologitEffects
 #' @rdname methods.rlassologitEffects
 #' @aliases methods.rlassologitEffects print.rlassologitEffects summary.rlassologitEffects confint.rlassologitEffects
 #' @export
@@ -248,25 +291,46 @@ confint.rlassologitEffects <- function(object, parm, level = 0.95, joint = FALSE
   }
   
   if (joint) {
-    phi <- object$residuals$e * object$residuals$v
-    m <- 1/sqrt(colMeans(phi^2))
-    phi <- t(t(phi)/m)
-    sigma <- sqrt(colMeans(phi^2))
+    # phi <- object$residuals$e * object$residuals$v
+    # m <- 1/sqrt(colMeans(phi^2))
+    # phi <- t(t(phi)/m)
+    # sigma <- sqrt(colMeans(phi^2))
+    # sim <- vector("numeric", length = B)
+    # for (i in 1:B) {
+    #   xi <- rnorm(n)
+    #   phi_temp <- phi * xi
+    #   Nstar <- 1/sqrt(n) * colSums(phi_temp)
+    #   sim[i] <- max(abs(Nstar))
+    # }
+    e <- object$residuals$e
+    v <- object$residuals$v
+    ev <- e*v
+    Ev2 <- colMeans(v^2)
+    Ee2v2 <- colMeans(ev^2)
+    Omegahat <- matrix(NA, ncol=k, nrow=k)
+    for (j in 1:k) {
+      for (l in 1:k) {
+        Omegahat[j,l] = Omegahat[l,j] = 1/(Ev2[j]*Ev2[l]) * mean(ev[,j]*ev[,l])
+      }
+    }
+    var <- diag(Omegahat)
+    Beta <- matrix(NA, ncol=B, nrow=k)
     sim <- vector("numeric", length = B)
     for (i in 1:B) {
-      xi <- rnorm(n)
-      phi_temp <- phi * xi
-      Nstar <- 1/sqrt(n) * colSums(phi_temp)
-      sim[i] <- max(abs(Nstar))
+      beta_i <- MASS::mvrnorm(mu = rep(0,k), Sigma=Omegahat/n)
+      sim[i] <- max(abs(sqrt(n)*beta_i/var))
     }
-    a <- (1 - level)/2
-    ab <- c(a, 1 - a)
-    pct <- format.perc(ab, 3)
-    ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
-                                                               pct))
+     a <- (1 - level)/2
+     ab <- c(a, 1 - a)
+     pct <- format.perc(ab, 3)
+     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
+                                                                pct))
+    # hatc <- quantile(sim, probs = 1 - a)
+    # ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sigma
+    # ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sigma
     hatc <- quantile(sim, probs = 1 - a)
-    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sigma
-    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sigma
+    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sqrt(var)
+    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sqrt(var)
   }
   return(ci)
 }

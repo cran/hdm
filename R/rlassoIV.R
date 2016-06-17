@@ -8,7 +8,9 @@
 #' (2015) and is built on 'triple selection' to achieve an orthogonal moment
 #' function. The function returns an object of S3 class \code{rlassoIV}.
 #' Moreover, it is wrap function for the case that selection should be done only with the instruments Z (\code{rlassoIVselectZ}) or with 
-#' the control variables X (\code{rlassoIVselectX}) or without selection (\code{tsls}).
+#' the control variables X (\code{rlassoIVselectX}) or without selection (\code{tsls}). Exogenous variables 
+#' \code{x} are automatically used as instruments and added to the
+#' instrument set \code{z}.
 #'
 #' @aliases rlassoIV rlassoIVmult
 #' @param x matrix of exogenous variables
@@ -16,8 +18,8 @@
 #' @param y outcome / dependent variable (vector or matrix)
 #' @param z matrix of instrumental variables
 #' @param post logical, wheter post-Lasso should be conducted (default=\code{TRUE})
-#' @param select.Z logical, indicating selection on the instruments
-#' @param select.X logical, indicating selection on the exogenous variables
+#' @param select.Z logical, indicating selection on the instruments.
+#' @param select.X logical, indicating selection on the exogenous variables.
 #' @param \dots arguments passed to the function \code{rlasso}
 #' @return an object of class \code{rlassoIV} containing at least the following
 #' components: \item{coefficients}{estimated parameter value}
@@ -25,11 +27,25 @@
 #' @references V. Chernozhukov, C. Hansen, M. Spindler (2015). Post-selection
 #' and post-regularization inference in linear models with many controls and
 #' instruments. American Economic Review: Paper & Proceedings 105(5), 486--490.
-#' @keywords Lasso Many controls and instruments Instrumental Variable
 #' @rdname rlassoIV
 #' @export
+#' @examples
+#'\dontrun{
+#' data(EminentDomain)
+#' z <- EminentDomain$logGDP$z # instruments
+#' x <- EminentDomain$logGDP$x # exogenous variables
+#' y <- EminentDomain$logGDP$y # outcome varialbe
+#' d <- EminentDomain$logGDP$d # treatment / endogenous variable
+#' lasso.IV.Z = rlassoIV(x=x, d=d, y=y, z=z, select.X=FALSE, select.Z=TRUE) 
+#' summary(lasso.IV.Z)
+#' confint(lasso.IV.Z)
+#' }
+rlassoIV <- function(x, ...)
+  UseMethod("rlassoIV") # definition generic function
 
-rlassoIV <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE, 
+#' @rdname rlassoIV
+#' @export
+rlassoIV.default <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE, 
                      ...) {
   d <- as.matrix(d)
   z <- as.matrix(z)
@@ -42,7 +58,7 @@ rlassoIV <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE,
   n <- length(y)
   
   if (select.Z == FALSE && select.X == FALSE) {
-    res <- tsls(y, d, x, z, ...)
+    res <- tsls(x, d, y, z, ...)
     return(res)
   }
   
@@ -57,22 +73,25 @@ rlassoIV <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE,
   }
   
   if (select.Z == TRUE && select.X == TRUE) {
+    
     Z <- cbind(z, x)
     lasso.d.zx <- rlasso(d ~ Z, post = post, ...)
     lasso.y.x <- rlasso(y ~ x, post = post, ...)
     lasso.d.x <- rlasso(d ~ x, post = post, ...)
-    if (sum(lasso.d.zx$index) == 0) 
+    if (sum(lasso.d.zx$index) == 0) {
+      message("No variables in the Lasso regression of d on z and x selected")
       return(list(alpha = NA, se = NA))
+    }
     ind.dzx <- lasso.d.zx$index
     PZ <- Z[, ind.dzx] %*% MASS::ginv(t(Z[, ind.dzx]) %*% Z[, ind.dzx]) %*% 
       t(Z[, ind.dzx]) %*% d
-    lasso.PZ.x <- rlasso.fit(x, PZ, post = post, ...)
+    lasso.PZ.x <- rlasso(x, PZ, post = post, ...)
     ind.PZx <- lasso.PZ.x$index
     
     if (sum(ind.PZx) == 0) {
       Dr <- d - mean(d)
     } else {
-      Dr <- d - predict(lasso.PZ.x, newdata = x)  #x[,ind.PZx]%*%MASS::ginv(t(x[,ind.PZx])%*%x[,ind.PZx])%*%t(x[,ind.PZx])%*%PZ
+      Dr <- d - predict(lasso.PZ.x)  #x[,ind.PZx]%*%MASS::ginv(t(x[,ind.PZx])%*%x[,ind.PZx])%*%t(x[,ind.PZx])%*%PZ
     }
     
     if (sum(lasso.y.x$index) == 0) {
@@ -87,7 +106,7 @@ rlassoIV <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE,
       Zr <- lasso.PZ.x$residuals
     }
     
-    result <- tsls(Yr, Dr, x = NULL, Zr, intercept = FALSE)
+    result <- tsls(y = Yr, d = Dr, x = NULL, z = Zr, intercept = FALSE)
     coef <- as.vector(result$coefficient)
     se <- diag(sqrt(result$vcov))
     names(coef) <- names(se) <- colnames(d)
@@ -96,82 +115,30 @@ rlassoIV <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post = TRUE,
     class(res) <- "rlassoIV"
     return(res)
   }
-  
-  
 }
 
+
+#' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+#' d endogenous variable, z instrumental variables, and x exogenous variables.
+#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIV} is called.
 #' @rdname rlassoIV
 #' @export
-
-rlassoIVmult <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, 
-                         ...) {
-  # browser()
-  d <- as.matrix(d)
-  if (is.null(colnames(d))) 
-    colnames(d) <- paste("d", 1:ncol(d), sep = "")
-  if (is.null(colnames(x)) & !is.null(x)) 
-    colnames(x) <- paste("x", 1:ncol(x), sep = "")
-  if (is.null(colnames(z)) & !is.null(z)) 
-    colnames(z) <- paste("z", 1:ncol(z), sep = "")
+rlassoIV.formula <- function(formula, data, select.Z = TRUE, select.X = TRUE, post = TRUE, 
+                     ...) {
   
-  if (select.Z == FALSE & select.X == FALSE) {
-    res <- tsls(y, d, x, z, ...)
-    return(res)
-  }
+  mat <- f.formula(formula, data, all.categories = FALSE)
+ 
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
   
-  if (select.Z == TRUE & select.X == FALSE) {
-    res <- rlassoIVselectZ(x, d, y, z, ...)
-    return(res)
-  }
+  res <- rlassoIV(x=x, d=d, y=y, z=z, select.Z = select.Z, select.X = select.X, post = post, 
+                  ...)
+  res$call <- match.call()
+  return(res)
   
-  if (select.Z == FALSE & select.X == TRUE) {
-    res <- rlassoIVselectX(x, d, y, z, ...)
-    return(res)
-  }
-  
-  if (select.Z == TRUE & select.X == TRUE) {
-    d <- as.matrix(d)
-    n <- dim(x)[1]
-    d <- as.matrix(d)
-    kd <- dim(d)[2]
-    Z <- cbind(z, x)
-    if (is.null(colnames(d))) 
-      colnames(d) <- paste("d", 1:kd, sep = "")
-    
-    lasso.y.x <- rlasso(x, y, ...)
-    Yr <- lasso.y.x$residuals
-    Drhat <- NULL
-    Zrhat <- NULL
-    for (i in 1:kd) {
-      lasso.d.x <- rlasso(d[, i] ~ x, ...)
-      lasso.d.zx <- rlasso(d[, i] ~ Z, ...)
-      if (sum(lasso.d.zx$index) == 0) {
-        Drhat <- cbind(Drhat, d[, i] - mean(d[, i]))
-        Zrhat <- cbind(Zrhat, d[, i] - mean(d[, i]))
-        next
-      }
-      ind.dzx <- lasso.d.zx$index
-      PZ <- Z[, ind.dzx, drop = FALSE] %*% MASS::ginv(t(Z[, ind.dzx, 
-                                                          drop = FALSE]) %*% Z[, ind.dzx, drop = FALSE]) %*% t(Z[, 
-                                                                                                                 ind.dzx, drop = FALSE]) %*% d[, i, drop = FALSE]
-      lasso.PZ.x <- rlasso(PZ ~ x, ...)
-      ind.PZx <- lasso.PZ.x$index
-      Dr <- d[, i] - x[, ind.PZx, drop = FALSE] %*% MASS::ginv(t(x[, 
-                                                                   ind.PZx, drop = FALSE]) %*% x[, ind.PZx, drop = FALSE]) %*% 
-        t(x[, ind.PZx, drop = FALSE]) %*% PZ
-      Zr <- lasso.PZ.x$residuals
-      Drhat <- cbind(Drhat, Dr)
-      Zrhat <- cbind(Zrhat, Zr)
-    }
-    result <- tsls(Yr, Drhat, x = NULL, Zrhat)
-    coef <- as.vector(result$coefficient)
-    se <- sqrt(diag(result$vcov))
-    names(coef) <- names(se) <- colnames(d)
-    res <- list(coefficients = coef, se = se, vcov = result$vcov, call = match.call(), 
-                samplesize = n)
-    class(res) <- "rlassoIV"
-    return(res)
-  }
 }
 
 
@@ -189,7 +156,6 @@ rlassoIVmult <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE,
 #' @param ... arguments passed to the print function and other methods
 #' @param parm a specification of which parameters are to be given confidence intervals, either a vector of numbers or a vector of names. If missing, all parameters are considered.
 #' @param level confidence level required.
-#' @keywords methods rlassoIV
 #' @rdname methods.rlassoIV
 #' @aliases methods.rlassoIV print.rlassoIV summary.rlassoIV
 #' @export
@@ -253,4 +219,80 @@ confint.rlassoIV <- function(object, parm, level = 0.95, ...) {
   ci[] <- cf[parm] + ses %o% fac
   print(ci)
   invisible(ci)
+}
+
+############################################################################################
+
+#' @rdname rlassoIV
+#' @export
+
+rlassoIVmult <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, 
+                         ...) {
+  # browser()
+  d <- as.matrix(d)
+  if (is.null(colnames(d))) 
+    colnames(d) <- paste("d", 1:ncol(d), sep = "")
+  if (is.null(colnames(x)) & !is.null(x)) 
+    colnames(x) <- paste("x", 1:ncol(x), sep = "")
+  if (is.null(colnames(z)) & !is.null(z)) 
+    colnames(z) <- paste("z", 1:ncol(z), sep = "")
+  
+  if (select.Z == FALSE & select.X == FALSE) {
+    res <- tsls(x=x, d=d, y=y, z=z, ...)
+    return(res)
+  }
+  
+  if (select.Z == TRUE & select.X == FALSE) {
+    res <- rlassoIVselectZ(x, d, y, z, ...)
+    return(res)
+  }
+  
+  if (select.Z == FALSE & select.X == TRUE) {
+    res <- rlassoIVselectX(x, d, y, z, ...)
+    return(res)
+  }
+  
+  if (select.Z == TRUE & select.X == TRUE) {
+    d <- as.matrix(d)
+    n <- dim(x)[1]
+    d <- as.matrix(d)
+    kd <- dim(d)[2]
+    Z <- cbind(z, x)
+    if (is.null(colnames(d))) 
+      colnames(d) <- paste("d", 1:kd, sep = "")
+    
+    lasso.y.x <- rlasso(x, y, ...)
+    Yr <- lasso.y.x$residuals
+    Drhat <- NULL
+    Zrhat <- NULL
+    for (i in 1:kd) {
+      lasso.d.x <- rlasso(d[, i] ~ x, ...)
+      lasso.d.zx <- rlasso(d[, i] ~ Z, ...)
+      if (sum(lasso.d.zx$index) == 0) {
+        Drhat <- cbind(Drhat, d[, i] - mean(d[, i]))
+        Zrhat <- cbind(Zrhat, d[, i] - mean(d[, i]))
+        next
+      }
+      ind.dzx <- lasso.d.zx$index
+      PZ <- Z[, ind.dzx, drop = FALSE] %*% MASS::ginv(t(Z[, ind.dzx, 
+                                                          drop = FALSE]) %*% Z[, ind.dzx, drop = FALSE]) %*% t(Z[, 
+                                                                                                                 ind.dzx, drop = FALSE]) %*% d[, i, drop = FALSE]
+      lasso.PZ.x <- rlasso(PZ ~ x, ...)
+      ind.PZx <- lasso.PZ.x$index
+      Dr <- d[, i] - x[, ind.PZx, drop = FALSE] %*% MASS::ginv(t(x[, 
+                                                                   ind.PZx, drop = FALSE]) %*% x[, ind.PZx, drop = FALSE]) %*% 
+        t(x[, ind.PZx, drop = FALSE]) %*% PZ
+      Zr <- lasso.PZ.x$residuals
+      Drhat <- cbind(Drhat, Dr)
+      Zrhat <- cbind(Zrhat, Zr)
+    }
+    result <- tsls(y = Yr, d = Drhat, x = NULL, z = Zrhat)
+    coef <- as.vector(result$coefficient)
+    se <- sqrt(diag(result$vcov))
+    names(coef) <- names(se) <- colnames(d)
+    res <- list(coefficients = coef, se = se, vcov = result$vcov, call = match.call(), 
+                samplesize = n)
+    class(res) <- "rlassoIV"
+    return(res)
+  }
 }

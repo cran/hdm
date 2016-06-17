@@ -24,7 +24,6 @@
 #' \item{num.it}{number of iterations run}
 #' @references Fu, W. (1998). Penalized regressions: the bridge vs the lasso.
 #' \emph{Journal of Computational and Graphical Software} 7, 397-416.
-#' @keywords Lasso Shooting Lasso
 #' @export
 
 
@@ -71,7 +70,7 @@ LassoShooting.fit <- function(x, y, lambda, control = list(maxIter = 1000,
     # Update
     wp <- cbind(wp, beta)
     # Check termination
-    if (sum(abs(beta - beta_old)) < control$optTol) {
+    if (sum(abs(beta - beta_old), na.rm = TRUE) < control$optTol) {
       break
     }
     m <- m + 1

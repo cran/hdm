@@ -30,25 +30,47 @@
 #' @references A. Belloni, V. Chernozhukov, C. Hansen (2014). Inference on
 #' treatment effects after selection among high-dimensional controls. The
 #' Review of Economic Studies 81(2), 608-650.
-#' @keywords Estimation Inference Treatment effect High-dimensional controls
 #' @export
 #' @rdname rlassoEffects
 #' @examples
-#' library(hdm)
-#' ## DGP
-#' n <- 250
-#' p <- 100
-#' px <- 10
-#' X <- matrix(rnorm(n*p), ncol=p)
-#' beta <- c(rep(2,px), rep(0,p-px))
-#' intercept <- 1
-#' y <- intercept + X %*% beta + rnorm(n)
-#' ## fit rlassoEffects object with inference on three variables
-#' rlassoEffects.reg <- rlassoEffects(x=X, y=y, index=c(1,7,20))
-#' ## methods
-#' summary(rlassoEffects.reg)
-#' confint(rlassoEffects.reg, level=0.9)
-rlassoEffects <- function(x, y, index = c(1:ncol(x)), method = "partialling out", 
+#' library(hdm); library(ggplot2)
+#' set.seed(1)
+#' n = 100 #sample size
+#' p = 100 # number of variables
+#' s = 3 # nubmer of non-zero variables
+#' X = matrix(rnorm(n*p), ncol=p)
+#' colnames(X) <- paste("X", 1:p, sep="")
+#' beta = c(rep(3,s), rep(0,p-s))
+#' y = 1 + X%*%beta + rnorm(n)
+#' data = data.frame(cbind(y,X))
+#' colnames(data)[1] <- "y"
+#' fm = paste("y ~", paste(colnames(X), collapse="+"))
+#' fm = as.formula(fm)                 
+#' lasso.effect = rlassoEffects(X, y, index=c(1,2,3,50))
+#' lasso.effect = rlassoEffects(fm, I = ~ X1 + X2 + X3 + X50, data=data)
+#' print(lasso.effect)
+#' summary(lasso.effect)
+#' confint(lasso.effect)
+# library(hdm)
+# ## DGP
+# n <- 250
+# p <- 100
+# px <- 10
+# X <- matrix(rnorm(n*p), ncol=p)
+# beta <- c(rep(2,px), rep(0,p-px))
+# intercept <- 1
+# y <- intercept + X %*% beta + rnorm(n)
+# ## fit rlassoEffects object with inference on three variables
+# rlassoEffects.reg <- rlassoEffects(x=X, y=y, index=c(1,7,20))
+# ## methods
+# summary(rlassoEffects.reg)
+# confint(rlassoEffects.reg, level=0.9)
+rlassoEffects <- function(x, ...)
+  UseMethod("rlassoEffects") # definition generic function 
+
+#' @export
+#' @rdname rlassoEffects
+rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partialling out", 
                           I3 = NULL, post = TRUE, ...) {
   
   checkmate::checkChoice(method, c("partialling out", "double selection"))
@@ -95,6 +117,7 @@ rlassoEffects <- function(x, y, index = c(1:ncol(x)), method = "partialling out"
   lasso.regs <- vector("list", k)
   reside <- matrix(NA, nrow = n, ncol = p1)
   residv <- matrix(NA, nrow = n, ncol = p1)
+  coef.mat <- NULL
   names(coefficients) <- names(se) <- names(t) <- names(pval) <- names(lasso.regs) <- colnames(reside) <- colnames(residv) <- colnames(x)[index]
   
   for (i in 1:k) {
@@ -102,7 +125,7 @@ rlassoEffects <- function(x, y, index = c(1:ncol(x)), method = "partialling out"
     Xt <- x[, -index[i], drop = FALSE]
     I3m <- I3[-index[i]]
     lasso.regs[[i]] <- try(col <- rlassoEffect(Xt, y, d, method = method, 
-                                               I3 = I3m, post = post, ...))
+                                               I3 = I3m, post = post, ...), silent = TRUE)
     if (class(lasso.regs[[i]]) == "try-error") {
       next
     } else {
@@ -112,14 +135,52 @@ rlassoEffects <- function(x, y, index = c(1:ncol(x)), method = "partialling out"
       pval[i] <- col$pval
       reside[, i] <- col$residuals$epsilon
       residv[, i] <- col$residuals$v
+      coef.mat <- cbind(coef.mat, col$coefficients.reg)
     }
   }
+  #colnames(coef.mat) <- colnames(x)[index]
   residuals <- list(e = reside, v = residv)
   res <- list(coefficients = coefficients, se = se, t = t, pval = pval, 
               lasso.regs = lasso.regs, index = index, call = match.call(), samplesize = n, 
-              residuals = residuals)
+              residuals = residuals, coef.mat = coef.mat)
   class(res) <- "rlassoEffects"
   return(res)
+}
+
+#' @rdname rlassoEffects
+#' @param formula An element of class \code{formula} specifying the linear model.
+#' @param I An one-sided formula specifying the variables for which inference is conducted.
+#' @param included One-sided formula of variables which should be included in any case (only for method="double selection").
+#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
+#' @export
+rlassoEffects.formula <- function(formula, data, I, method = "partialling out", 
+                              included = NULL, post = TRUE, ...) {
+  cl <- match.call()
+  if (missing(data))  data <- environment(formula)
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1L]] <- quote(stats::model.frame)
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  attr(mt, "intercept") <- 1
+  y <- model.response(mf, "numeric")
+  n <- length(y)
+  x <- model.matrix(mt, mf)[,-1, drop=FALSE]
+  cn <- attr(mt, "term.labels")
+  try(if (is.matrix(eval(parse(text=cn)))) cn <- colnames(eval(parse(text=cn))), silent=TRUE)
+  I.c <- check_variables(I, cn)
+  I3 <- check_variables(included, cn)
+  
+  #if (length(intersect(I.c, I3) != 0)) 
+  #  stop("I and included should not contain the same variables!")
+  
+  est <- rlassoEffects(x, y, index = I.c, method = method, 
+                                I3 = I3, post = post, ...)
+  est$call <- cl
+  return(est)
 }
 
 #' @rdname rlassoEffects
@@ -153,6 +214,7 @@ rlassoEffect <- function(x, y, d, method = "double selection", I3 = NULL,
     x <- cbind(d, x[, I, drop = FALSE])
     reg1 <- lm(y ~ x)
     alpha <- coef(reg1)[2]
+    names(alpha) <- colnames(d)
     xi <- reg1$residuals * sqrt(n/(n - sum(I) - 1))
     if (is.null(I)) {
       reg2 <- lm(d ~ 1)
@@ -176,7 +238,9 @@ rlassoEffect <- function(x, y, d, method = "double selection", I3 = NULL,
     # coefficients=unname(alpha), coefficient=unname(alpha),
     # coefficients.reg=coef(reg1), residuals=res, call=match.call(),
     # samplesize=n)
-    results <- list(alpha = alpha, se = drop(se), t = tval, pval = pval, 
+    se <- drop(se)
+    names(se) <- colnames(d)
+    results <- list(alpha = alpha, se = se, t = tval, pval = pval, 
                     no.selected = no.selected, coefficients = alpha, coefficient = alpha, 
                     coefficients.reg = coef(reg1), residuals = res, call = match.call(), 
                     samplesize = n)
@@ -214,7 +278,6 @@ rlassoEffect <- function(x, y, d, method = "double selection", I3 = NULL,
 #' @param x an object of class \code{rlassoEffects}
 #' @param digits significant digits in printout
 #' @param ... arguments passed to the print function and other methods.
-#' @keywords methods rlassoEffects
 #' @rdname methods.rlassoEffects
 #' @aliases methods.rlassoEffects print.rlassoEffects confint.rlassoEffects plot.rlassoEffects
 #' @export
@@ -239,6 +302,53 @@ print.rlassoEffects <- function(x, digits = max(3L, getOption("digits") -
 #' @param joint logical, if \code{TRUE} joint confidence intervals are calculated.
 #' @export
 
+# confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE, 
+#                                   ...) {
+#   B <- 500  # number of bootstrap repitions
+#   n <- object$samplesize
+#   k <- p1 <- length(object$coefficients)
+#   cf <- coef(object)
+#   pnames <- names(cf)
+#   if (missing(parm)) 
+#     parm <- pnames else if (is.numeric(parm)) 
+#       parm <- pnames[parm]
+#   if (!joint) {
+#     a <- (1 - level)/2
+#     a <- c(a, 1 - a)
+#     # fac <- qt(a, n-k)
+#     fac <- qnorm(a)
+#     pct <- format.perc(a, 3)
+#     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
+#                                                                pct))
+#     ses <- object$se[parm]
+#     ci[] <- cf[parm] + ses %o% fac
+#   }
+#   
+#   if (joint) {
+#     phi <- object$residuals$e * object$residuals$v
+#     m <- 1/sqrt(colMeans(phi^2))
+#     phi <- t(t(phi)/m)
+#     sigma <- sqrt(colMeans(phi^2))
+#     sim <- vector("numeric", length = B)
+#     for (i in 1:B) {
+#       xi <- rnorm(n)
+#       phi_temp <- phi * xi
+#       Nstar <- 1/sqrt(n) * colSums(phi_temp)
+#       sim[i] <- max(abs(Nstar))
+#     }
+#     a <- (1 - level)/2
+#     ab <- c(a, 1 - a)
+#     pct <- format.perc(ab, 3)
+#     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
+#                                                                pct))
+#     hatc <- quantile(sim, probs = 1 - a)
+#     ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sigma
+#     ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sigma
+#   }
+#   return(ci)
+# }
+
+
 confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE, 
                                   ...) {
   B <- 500  # number of bootstrap repitions
@@ -262,16 +372,23 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
   }
   
   if (joint) {
-    phi <- object$residuals$e * object$residuals$v
-    m <- 1/sqrt(colMeans(phi^2))
-    phi <- t(t(phi)/m)
-    sigma <- sqrt(colMeans(phi^2))
+    e <- object$residuals$e
+    v <- object$residuals$v
+    ev <- e*v
+    Ev2 <- colMeans(v^2)
+    Ee2v2 <- colMeans(ev^2)
+    Omegahat <- matrix(NA, ncol=k, nrow=k)
+    for (j in 1:k) {
+      for (l in 1:k) {
+        Omegahat[j,l] = Omegahat[l,j] = 1/(Ev2[j]*Ev2[l]) * mean(ev[,j]*ev[,l])
+        }
+    }
+    var <- diag(Omegahat)
+    Beta <- matrix(NA, ncol=B, nrow=k)
     sim <- vector("numeric", length = B)
     for (i in 1:B) {
-      xi <- rnorm(n)
-      phi_temp <- phi * xi
-      Nstar <- 1/sqrt(n) * colSums(phi_temp)
-      sim[i] <- max(abs(Nstar))
+      beta_i <- MASS::mvrnorm(mu = rep(0,k), Sigma=Omegahat/n)
+      sim[i] <- max(abs(sqrt(n)*beta_i/var))
     }
     a <- (1 - level)/2
     ab <- c(a, 1 - a)
@@ -279,11 +396,12 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
                                                                pct))
     hatc <- quantile(sim, probs = 1 - a)
-    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sigma
-    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sigma
+    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sqrt(var)
+    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sqrt(var)
   }
   return(ci)
 }
+
 
 #' @rdname methods.rlassoEffects
 #' @export
@@ -291,11 +409,11 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
 #' @param xlab a title for the x axis
 #' @param ylab a title for the y axis
 #' @param xlim vector of length two giving lower and upper bound of x axis
-plot.rlassoEffects <- function(x, main = "", xlab = "coef", ylab = "", 
+plot.rlassoEffects <- function(x, joint=FALSE, level= 0.95, main = "", xlab = "coef", ylab = "", 
                                xlim = NULL, ...) {
   
   # generate ordered KI-matrix
-  coefmatrix <- cbind(summary(x)$coef, confint(x))[, c(1, 5, 6)]
+  coefmatrix <- cbind(summary(x)$coef, confint(x, joint = joint, level=level))[, c(1, 5, 6)]
   if (is.null(dim(coefmatrix))) {
     vec <- coefmatrix
     coefmatrix <- matrix(vec, ncol = 3)
@@ -319,12 +437,12 @@ plot.rlassoEffects <- function(x, main = "", xlab = "coef", ylab = "",
   }
   # generate points
   plotobject <- ggplot2::ggplot(coefmatrix, ggplot2::aes(y = coef, x = factor(names, 
-                                                                              levels = names))) + ggplot2::geom_point(colour = col, size = 1.75) + 
-    ggplot2::geom_hline(h = 0, colour = col, width = 0.1)
+                                                                              levels = names))) + ggplot2::geom_point(colour = col) + 
+  ggplot2::geom_hline(colour = col, ggplot2::aes(width = 0.1, h = 0, yintercept=0))
   
   # generate errorbars (KIs)
   plotobject <- plotobject + ggplot2::geom_errorbar(ymin = coefmatrix$lower, 
-                                                    ymax = coefmatrix$upper, colour = col, width = 0.4, size = 0.2)
+                                                    ymax = coefmatrix$uppe, colour = col)
   
   # further graphic parameter
   plotobject <- plotobject + ggplot2::ggtitle(main) + ggplot2::ylim(low, 
@@ -337,6 +455,7 @@ plot.rlassoEffects <- function(x, main = "", xlab = "coef", ylab = "",
   # layout
   plotobject <- plotobject + ggplot2::theme_bw() + ggplot2::geom_blank() + 
     ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(), panel.grid.minor.x = ggplot2::element_blank())
+  plotobject <- plotobject + scale_x_discrete(labels = abbreviate)
   # plot
   plotobject
 }

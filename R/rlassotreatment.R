@@ -26,35 +26,82 @@
 #' individual effects in the form of a \code{list}.
 #' @references A. Belloni, V. Chernozhukov, I. Fernandez-Val, and C. Hansen
 #' (2014). Program evaluation with high-dimensional data. Working Paper.
-#' @keywords local average treatment effect late latt local average structural
-#' effect lasf lasft
 #' @rdname TE
 #' @export
+rlassoATE <- function(x, ...)
+  UseMethod("rlassoATE") # definition generic function
 
-rlassoATE <- function(x, d, y, bootstrap = "none", nRep = 500, ...) {
+#' @rdname TE
+#' @export
+rlassoATE.default <- function(x, d, y, bootstrap = "none", nRep = 500, ...) {
   z <- d
   res <- rlassoLATE(x, d, y, z, bootstrap = bootstrap, nRep = nRep, ...)
   res$type <- "ATE"
   return(res)
 }
 
+#' @rdname TE
+#' @export
+#' @param formula An object of class \code{Formula} of the form " y ~ x + d | x" with y the outcome variable,
+#' d treatment variable, and x exogenous variables.
+#' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoATE} is called.
+rlassoATE.formula <- function(formula, data, bootstrap = "none", nRep = 500, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  check_binary(d)
+  res <- rlassoATE(x=x, d=d, y=y, bootstrap = bootstrap, nRep = nRep, ...)
+  res$call <- match.call()
+  return(res)
+}
+
 #' @export
 #' @rdname TE
-rlassoATET <- function(x, d, y, bootstrap = "none", nRep = 500, ...) {
+rlassoATET <- function(x, ...)
+  UseMethod("rlassoATET") # definition generic function
+
+#' @export
+#' @rdname TE
+rlassoATET.default <- function(x, d, y, bootstrap = "none", nRep = 500, ...) {
   z <- d
   res <- rlassoLATET(x, d, y, z, bootstrap = bootstrap, nRep = nRep, 
                      ...)
   res$type <- "ATET"
   return(res)
 }
+
+#' @rdname TE
+#' @export
+# #' @param formula An object of class \code{Formula} of the form " y ~ x + d | x" with y the outcome variable,
+# #' d treatment variable, and x exogenous variables.
+# #' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+# #' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoATET} is called.
+rlassoATET.formula <- function(formula, data, bootstrap = "none", nRep = 500, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  check_binary(d)
+  res <- rlassoATET(x=x, d=d, y=y, bootstrap = bootstrap, nRep = nRep, ...)
+  res$call <- match.call()
+  return(res)
+}
+
+
+#' @export
+#' @rdname TE
+rlassoLATE <- function(x, ...)
+  UseMethod("rlassoLATE") # definition generic function
+
 #' @export
 #' @param post logical. If \code{TRUE}, post-lasso estimation is conducted.
 #' @param intercept logical. If \code{TRUE}, intercept is included which is not
 #' penalized.
 #' @rdname TE
-
-rlassoLATE <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE, 
-                       intercept = TRUE) {
+rlassoLATE.default <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE, 
+                       intercept = TRUE, ...) {
   x <- as.matrix(x)
   n <- dim(x)[1]
   p <- dim(x)[2]
@@ -131,10 +178,36 @@ rlassoLATE <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE,
   return(object)
 }
 
+
+#' @rdname TE
+#' @export
+# #' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+# #' d endogenous variable, z instrumental variables, and x exogenous variables.
+# #' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+# #' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoLATE} is called.
+  rlassoLATE.formula <- function(formula, data, bootstrap = "none", nRep = 500, post = TRUE, intercept = TRUE, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE, ...)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
+  check_binary(d)
+  check_binary(z)
+  res <- rlassoLATE(x=x, d=d, y=y, z=z, bootstrap = bootstrap, nRep = nRep, post = post, 
+                        intercept = intercept)
+  res$call <- match.call()
+  return(res)
+}
+
 #' @export
 #' @rdname TE
-rlassoLATET <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE, 
-                        intercept = TRUE) {
+rlassoLATET <- function(x, ...)
+  UseMethod("rlassoLATET") # definition generic function  
+  
+#' @export
+#' @rdname TE
+rlassoLATET.default <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE, 
+                        intercept = TRUE, ...) {
   x <- as.matrix(x)
   n <- dim(x)[1]
   p <- dim(x)[2]
@@ -204,6 +277,26 @@ rlassoLATET <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE,
   return(object)
 }
 
+#' @rdname TE
+#' @export
+# #' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+# #' d endogenous variable, z instrumental variables, and x exogenous variables.
+# #' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+# #' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoLATE} is called.
+rlassoLATET.formula <- function(formula, data,  bootstrap = "none", nRep = 500, post = TRUE, 
+                        intercept = TRUE, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
+  check_binary(d)
+  check_binary(z)
+  res <- rlassoLATET(x=x, d=d, y=y, z=z, bootstrap = bootstrap, nRep = nRep, post = post, 
+                        intercept = intercept)
+  res$call <- match.call()
+  return(res)
+}
 
 ################# Methods for rlassoTE
 
@@ -219,7 +312,6 @@ rlassoLATET <- function(x, d, y, z, bootstrap = "none", nRep = 500, post = TRUE,
 #' @param ... arguments passed to the print function and other methods
 #' @param parm a specification of which parameters are to be given confidence intervals, either a vector of numbers or a vector of names. If missing, all parameters are considered.
 #' @param level confidence level required.
-#' @keywords methods rlassoTE
 #' @rdname methods.rlassoTE
 #' @aliases methods.rlassoTE print.rlassoTE summary.rlassoTE
 #' @export

@@ -16,7 +16,8 @@
 #' @param z set of potential instruments for the endogenous variables.
 #' Exogenous variables serve as their own instruments.
 #' @param post logical. If \code{TRUE}, post-lasso estimation is conducted.
-#' @param \dots arguments passed to the function \code{rlasso}
+#' @param intercept logical. If \code{TRUE}, intercept is included in the second stage equation.
+#' @param \dots arguments passed to the function \code{rlasso}.
 #' @return An object of class \code{rlassoIVselectZ} containing at least the following
 #' components: \item{coefficients}{estimated parameter vector}
 #' \item{vcov}{variance-covariance matrix} \item{residuals}{
@@ -24,10 +25,12 @@
 #' @references D. Belloni, D. Chen, V. Chernozhukov and C. Hansen (2012).
 #' Sparse models and methods for optimal instruments with an application to
 #' eminent domain. \emph{Econometrica} 80 (6), 2369--2429.
-#' @keywords Instrumental Variables Lasso Hig-dimensional setting
+rlassoIVselectZ <- function(x, ...)
+  UseMethod("rlassoIVselectZ") # definition generic function
+
 #' @export
 #' @rdname rlassoIVselectZ
-rlassoIVselectZ <- function(x, d, y, z, post = TRUE, ...) {
+rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, ...) {
   
   d <- as.matrix(d)
   if (is.vector(x)) x <- as.matrix(x)
@@ -46,19 +49,33 @@ rlassoIVselectZ <- function(x, d, y, z, post = TRUE, ...) {
   
   # first stage regression
   Dhat <- NULL
+  flag.const <- 0
   for (i in 1:ke) {
     di <- d[, i]
-    lasso.fit <- rlasso(di ~ Z, post = post, ...)
+    lasso.fit <- rlasso(di ~ Z, post = post, intercept = intercept, ...)
     if (sum(lasso.fit$ind) == 0) {
       dihat <- rep(mean(di), n)  #dihat <- mean(di)
+      flag.const <- flag.const + 1
+      if (flag.const >1) message("No variables selected for two or more instruments leading to multicollinearity problems.")
+      #intercept <- FALSE # to avoid multicollineariry
     } else {
       # dihat <- z%*%lasso.fit$coefficients
-      dihat <- predict(lasso.fit, newdata = Z)
+      dihat <- predict(lasso.fit)
     }
     Dhat <- cbind(Dhat, dihat)
   }
+  
+  #if (intercept) { #?
+  #  Dhat <- cbind(Dhat, 1, x) 
+  #  d <- cbind(d, 1, x)
+  #} else {
+  #  Dhat <- cbind(Dhat, x)
+  #  d <- cbind(d, x)
+  #}
+  
   Dhat <- cbind(Dhat, x)
   d <- cbind(d, x)
+  
   # calculation coefficients
   alpha.hat <- solve(t(Dhat) %*% d) %*% (t(Dhat) %*% y)
   # alpha.hat <- MASS::ginv(t(Dhat)%*%d)%*%(t(Dhat)%*%y) calcualtion of
@@ -76,6 +93,24 @@ rlassoIVselectZ <- function(x, d, y, z, post = TRUE, ...) {
   return(res)
 }
 
+
+#' @rdname rlassoIVselectZ
+#' @export
+#' @param formula An object of class \code{Formula} of the form " y ~ x + d | x + z" with y the outcome variable,
+#' d endogenous variable, z instrumental variables, and x exogenous variables.
+#' @param data An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
+#' If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIVselectZ} is called.
+rlassoIVselectZ.formula <- function(formula, data, post=TRUE, intercept = TRUE, ...) {
+  mat <- f.formula(formula, data, all.categories = FALSE)
+  y <- mat$Y
+  x <- mat$X
+  d <- mat$D
+  z <- mat$Z
+  
+  res <- rlassoIVselectZ(x=x,d=d,y=y,z=z, post=post, intercept=intercept, ...)
+  res$call <- match.call()
+  return(res)
+}
 ################# Methods for rlassoIVselectZ
 
 #' Methods for S3 object \code{rlassoIVselectZ}
@@ -90,7 +125,6 @@ rlassoIVselectZ <- function(x, d, y, z, post = TRUE, ...) {
 #' @param ... arguments passed to the print function and other methods
 #' @param parm a specification of which parameters are to be given confidence intervals, either a vector of numbers or a vector of names. If missing, all parameters are considered.
 #' @param level confidence level required.
-#' @keywords methods rlassoIVselectZ
 #' @rdname methods.rlassoIVselectZ
 #' @aliases methods.rlassoIVselectZ print.rlassoIVselectZ summary.rlassoIVselectZ
 #' @export
