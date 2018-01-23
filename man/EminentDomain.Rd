@@ -18,7 +18,32 @@ Data set was analyzed in Belloni et al. (2012).  They estimate the effect of jud
 A detailed decription of the data can be found at 
 \url{https://www.econometricsociety.org/publications/econometrica/2012/11/01/sparse-models-and-methods-optimal-instruments-application} 
 The data set contains four "sub-data sets" which differ mainly in the dependent variables: repeat-sales FHFA/OFHEO house price index for metro (FHFA) and non-metro (NM) area, the Case-Shiller home price index (CS), 
-and state-level GDP from the Bureau of Economic Analysis - all transformed with the logarithm. The structure of each subdata set is comparable and given above.
+and state-level GDP from the Bureau of Economic Analysis - all transformed with the logarithm. The structure of each subdata set is given above.
+In the data set the following variables and name conventions are used:
+"numpanelskx_..." is the number of panels with at least k members with the characteristic following the "_". 
+The probability controls (names start with "F_prob_") follow a similar naming convention and give the probability of observing a panel with characteristic given following second "_" given the characteristics of the pool of judges available to be assigned to the case.
+
+Characteristics in the data for the control variables or instruments:
+\describe{
+\item{noreligion}{judge reports no religious affiliation}
+\item{jd_public}{judge's law degree is from a public university}
+\item{dem}{judge reports being a democrat}
+\item{female}{judge is female}
+\item{nonwhite}{judge is nonwhite (and not black)}
+\item{black}{judge is black}
+\item{jewish}{judge is  Jewish}
+\item{catholic}{judge is Catholic}
+\item{mainline}{baseline religion}
+\item{protestant}{belongs to a protestant church}
+\item{evangelical}{belongs to an evangelical church}
+\item{instate_ba}{judge's undergraduate degree was obtained within state}
+\item{ba_public}{judge's undergraduate degree was obtained at a public university}
+\item{elev}{judge was elevated from a district court}
+\item{year}{year dummy (reference category is one year before the earliest year in the data set (excluded))}
+\item{circuit}{dummy for the circuit level (reference category excluded)}
+\item{missing_cy_12}{a dummy for whether there were no cases in that circuit-year}
+\item{numcasecat_12}{the number of takings appellate decisions}
+}
 }
 \examples{
 data(EminentDomain)

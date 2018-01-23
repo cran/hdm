@@ -24,6 +24,8 @@
 #' @references Chernozhukov, V., Hansen, C. and M. Spindler (2015). Post-Selection and Post-Regularization Inference in Linear
 #' Models with Many Controls and Instruments
 #' \emph{American Economic Review, Papers and Proceedings} 105(5), 486--490.
+#' @export
+#' @rdname rlassoIVselectX
 #' @examples
 #' library(hdm)
 #' data(AJR); y = AJR$GDP; d = AJR$Exprop; z = AJR$logMort
@@ -51,7 +53,7 @@ rlassoIVselectX.default <- function(x,d,y,z, post=TRUE, ...) {
   numIV <- dim(z)[2]
   Z <- cbind(z,x)
   lasso.d.x <- rlasso(d ~ x, post=post, ...)
-  Dr <- d - predict(lasso.d.x, newdata=x)
+  Dr <- d - predict(lasso.d.x)
   lasso.y.x <- rlasso(y ~ x, post=post, ...)
   Yr <- y - predict(lasso.y.x)
   Zr <- matrix(NA, nrow=n, ncol=numIV)

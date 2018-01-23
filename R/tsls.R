@@ -66,7 +66,7 @@ tsls.default <- function(x, d, y, z, intercept=TRUE, homoscedastic=TRUE, ...) {
   #M <- MASS::ginv(Mxz %*% Mzz %*% t(Mxz))
   
   b <- M %*% Mxz %*% Mzz %*% (t(Z) %*% y)
-  #Dhat <- Z %*% solve(t(Z) %*% Z) %*% t(Z) %*% X
+  #Dhat <- Z %*% MASS::ginv(t(Z) %*% Z) %*% t(Z) %*% X
   #b2 <- MASS::ginv(t(Dhat) %*% X) %*% (t(Dhat) %*% y)
   if (homoscedastic==TRUE) {
   e <- y - X %*% b
@@ -82,6 +82,7 @@ tsls.default <- function(x, d, y, z, intercept=TRUE, homoscedastic=TRUE, ...) {
     S <- S*1/n
     VC1 <- n*M%*%(Mxz%*%Mzz%*%S%*%Mzz%*%t(Mxz))%*%M
   }
+  rownames(b) <- colnames(VC1) <- rownames(VC1) <- c(colnames(d), colnames(x))
   res <- list(coefficients = b, vcov = VC1, se=sqrt(diag(VC1)), residuals = e, call=match.call(), samplesize=n)
   class(res) <- "tsls"
   return(res)
@@ -105,8 +106,8 @@ tsls.formula <- function(formula, data, intercept=TRUE, homoscedastic=TRUE, ...)
   res$call <- match.call()
   return(res)
 }
-################# Methods for tsls
 
+################# Methods for tsls
 #' Methods for S3 object \code{tsls}
 #'
 #' Objects of class \code{tsls} are constructed by \code{tsls}. 

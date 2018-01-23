@@ -5,7 +5,7 @@ format.perc <- function(probs, digits) paste(format(100 * probs, trim = TRUE,
 # variables with the highest correlation
 
 init_values <- function(X, y, number = 5, intercept = TRUE) {
-  suppressWarnings(corr <- cor(y, X))
+  suppressWarnings(corr <- abs(cor(y, X)))
   kx <- dim(X)[2]
   index <- order(corr, decreasing = T)[1:min(number, kx)]
   coefficients <- rep(0, kx)

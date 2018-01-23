@@ -57,6 +57,27 @@ The functions estimates (low-dimensional) target coefficients in a high-dimensio
 An application is e.g. estimation of a treatment effect \eqn{\alpha_0} in a
 setting of high-dimensional controls. The function is a wrap function for \code{rlassologitEffect} which does inference for only one variable (d).
 }
+\examples{
+\dontrun{
+library(hdm)
+## DGP
+set.seed(2)
+n <- 250
+p <- 100
+px <- 10
+X <- matrix(rnorm(n*p), ncol=p)
+colnames(X) = paste("V", 1:p, sep="")
+beta <- c(rep(2,px), rep(0,p-px))
+intercept <- 1
+P <- exp(intercept + X \%*\% beta)/(1+exp(intercept + X \%*\% beta))
+y <- rbinom(length(y), size=1, prob=P)
+xd <- X[,2:50]
+d <- X[,1]
+logit.effect <- rlassologitEffect(x=xd, d=d, y=y)
+logit.effects <- rlassologitEffects(X,y, index=c(1,2,40))
+logit.effects.f <- rlassologitEffects(y ~ X, I = ~ V1 + V2)
+}
+}
 \references{
 A. Belloni, V. Chernozhukov, Y. Wei (2013). Honest confidence regions for a regression parameter in logistic regression with a loarge number of controls.
 cemmap working paper CWP67/13.

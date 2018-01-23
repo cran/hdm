@@ -87,6 +87,7 @@ lasso.effect = rlassoEffects(fm, I = ~ X1 + X2 + X3 + X50, data=data)
 print(lasso.effect)
 summary(lasso.effect)
 confint(lasso.effect)
+plot(lasso.effect)
 }
 \references{
 A. Belloni, V. Chernozhukov, C. Hansen (2014). Inference on

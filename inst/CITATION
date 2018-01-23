@@ -6,15 +6,15 @@ citEntry(entry = "Article",
                                    as.person("Chris Hansen"),
                                    as.person("Martin Spindler")),
          journal      = "R Journal",
-         year         = "2016+",
-         volume       = "forthcoming",
-         number       = "",
-         pages        = "",
-         url          = "https://journal.r-project.org/",
+         year         = "2016",
+         volume       = "8",
+         number       = "2",
+         pages        = "185-199",
+         url          = "https://journal.r-project.org/archive/2016/RJ-2016-040/index.html",
          
          textVersion  =
            paste("Victor Chernozhukov, Chris Hansen, Martin Spindler (2016+).",
                  "hdm: High-Dimensional Metrics",
-                 "R Journal, forthcoming.",
-                 "URL https://journal.r-project.org/.")
+                 "R Journal, 8(2), 185-199.",
+                 "URL https://journal.r-project.org/archive/2016/RJ-2016-040/index.html.")
 )

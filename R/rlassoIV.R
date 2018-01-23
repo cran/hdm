@@ -75,9 +75,9 @@ rlassoIV.default <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post 
   if (select.Z == TRUE && select.X == TRUE) {
     
     Z <- cbind(z, x)
-    lasso.d.zx <- rlasso(d ~ Z, post = post, ...)
-    lasso.y.x <- rlasso(y ~ x, post = post, ...)
-    lasso.d.x <- rlasso(d ~ x, post = post, ...)
+    lasso.d.zx <- rlasso(Z, d, post = post, ...)
+    lasso.y.x <- rlasso(x, y, post = post, ...)
+    lasso.d.x <- rlasso(x, d, post = post, ...)
     if (sum(lasso.d.zx$index) == 0) {
       message("No variables in the Lasso regression of d on z and x selected")
       return(list(alpha = NA, se = NA))

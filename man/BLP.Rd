@@ -26,7 +26,7 @@ Automobile data set from the US.
 }
 \details{
 Data set was analysed in Berry, Levinsohn and Pakes (1995). The data stem from annual issues of the Automotive News Market Data Book. 
-The data set inlcudes information on all models marketed during the the periord beginning 1971 and ending in 1990 cotaining 2217 model/years from 997 distinct models.
+The data set inlcudes information on all models marketed during the the period beginning 1971 and ending in 1990 cotaining 2217 model/years from 997 distinct models.
 A detailed description is given in BLP (1995, 868--871). The internal function \code{constructIV} constructs instrumental variables along the lines described and used in BLP (1995).
 }
 \examples{

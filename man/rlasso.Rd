@@ -2,6 +2,7 @@
 % Please edit documentation in R/rlasso.R
 \name{rlasso}
 \alias{rlasso}
+\alias{rlasso.character}
 \alias{rlasso.default}
 \alias{rlasso.formula}
 \title{rlasso: Function for Lasso estimation under homoscedastic and heteroscedastic non-Gaussian
@@ -9,7 +10,12 @@ disturbances}
 \usage{
 rlasso(x, ...)
 
-\method{rlasso}{formula}(formula, data, post = TRUE, intercept = TRUE,
+\method{rlasso}{formula}(formula, data = NULL, post = TRUE,
+  intercept = TRUE, model = TRUE, penalty = list(homoscedastic = FALSE,
+  X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = 0.1/log(n)),
+  control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)
+
+\method{rlasso}{character}(x, data = NULL, post = TRUE, intercept = TRUE,
   model = TRUE, penalty = list(homoscedastic = FALSE, X.dependent.lambda =
   FALSE, lambda.start = NULL, c = 1.1, gamma = 0.1/log(n)),
   control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)

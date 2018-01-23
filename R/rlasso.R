@@ -82,9 +82,9 @@ globalVariables(c("post", "intercept", "penalty", "control", "error", "n", "sele
 #' yhat = predict(reg.lasso, newdata = Xnew)
 #' @export
 #' @rdname rlasso
-rlasso <- function(x, ...)
+rlasso <- function(x, ...) {
   UseMethod("rlasso") # definition generic function
-
+  }
 #' @param formula an object of class "formula" (or one that can be coerced to
 #' that class): a symbolic description of the model to be fitted in the form
 #' \code{y~x}
@@ -94,7 +94,7 @@ rlasso <- function(x, ...)
 #' typically the environment from which \code{rlasso} is called.
 #' @rdname rlasso
 #' @export
-rlasso.formula <- function(formula, data, post = TRUE, intercept = TRUE, model = TRUE, 
+rlasso.formula <- function(formula, data = NULL, post = TRUE, intercept = TRUE, model = TRUE, 
                            penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
                           control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...) {
   cl <- match.call()
@@ -113,9 +113,9 @@ rlasso.formula <- function(formula, data, post = TRUE, intercept = TRUE, model =
   if (missing(data)) {
     if (is.call(formula[[3]])) { 
     #colnames(x) <- sub(format(formula[[3]]), "", colnames(x))
-    colnames(x) <- gsub(re.escape(format(formula[[3]])), "", colnames(x))
+    colnames(x) <- sub(re.escape(format(formula[[3]])), "", colnames(x))
     } else {
-      colnames(x) <- gsub(re.escape(formula[[3]]), "", colnames(x))  
+      colnames(x) <- sub(re.escape(formula[[3]]), "", colnames(x))  
     }
   }
   est <- rlasso(x, y, post = post, intercept = intercept, penalty=penalty, model=model, 
@@ -123,6 +123,17 @@ rlasso.formula <- function(formula, data, post = TRUE, intercept = TRUE, model =
   est$call <- cl
   return(est)
 }
+
+#' @rdname rlasso
+#' @export
+rlasso.character <- function(x, data = NULL, post = TRUE, intercept = TRUE, model = TRUE, 
+                           penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
+                           control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...) {
+  formula <- as.formula(x)
+  res <- rlasso.formula(formula, data = data, post = post, intercept = intercept, model = model, 
+                        penalty = penalty, control = control, ...)
+}
+
 
 #' @rdname rlasso
 #' @export
@@ -155,7 +166,8 @@ rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE,
     control$tol = 10^-5
   }
   
-  if (post==FALSE & (!exists("c", where = penalty) | is.na(match("penalty", names(as.list(match.call)))))) {
+  #if (post==FALSE & (!exists("c", where = penalty) | is.na(match("penalty", names(as.list(match.call)))))) {
+  if (post==FALSE & (!exists("c", where = penalty))) {  
     penalty$c = 0.5
   }
   
@@ -505,7 +517,7 @@ print.rlasso <- function(x, all=TRUE ,digits = max(3L, getOption("digits") - 3L)
       print.default(format(coef(x)[c(TRUE,x$index)], digits = digits), print.gap = 2L,
                     quote = FALSE)
       } else {
-        print.default(format(beta$x[x$index], digits = digits), print.gap = 2L,
+        print.default(format(x$beta[x$index], digits = digits), print.gap = 2L,
                       quote = FALSE)
       }
     }

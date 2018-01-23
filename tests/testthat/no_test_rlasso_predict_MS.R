@@ -20,6 +20,7 @@ colnames(dat)[1] <- "Y"
 # plain
 
 lasso.reg1 = rlasso(Y~X,post=TRUE)
+lasso.reg1a = rlasso("Y~X",post=TRUE)
 lasso.reg1b = rlasso(Y~X,post=FALSE)
 yhat1 = predict(lasso.reg1, newdata=Xnew)
 yhat1b = predict(lasso.reg1)

@@ -2,15 +2,20 @@
 % Please edit documentation in R/rlassologit.R
 \name{rlassologit}
 \alias{rlassologit}
+\alias{rlassologit.character}
 \alias{rlassologit.default}
 \alias{rlassologit.formula}
 \title{rlassologit: Function for logistic Lasso estimation}
 \usage{
 rlassologit(x, ...)
 
-\method{rlassologit}{formula}(formula, data, post = TRUE, intercept = TRUE,
-  model = TRUE, penalty = list(lambda = NULL, c = 1.1, gamma = 0.1/log(n)),
-  control = list(threshold = NULL), ...)
+\method{rlassologit}{formula}(formula, data = NULL, post = TRUE,
+  intercept = TRUE, model = TRUE, penalty = list(lambda = NULL, c = 1.1,
+  gamma = 0.1/log(n)), control = list(threshold = NULL), ...)
+
+\method{rlassologit}{character}(x, data = NULL, post = TRUE,
+  intercept = TRUE, model = TRUE, penalty = list(lambda = NULL, c = 1.1,
+  gamma = 0.1/log(n)), control = list(threshold = NULL), ...)
 
 \method{rlassologit}{default}(x, y, post = TRUE, intercept = TRUE,
   model = TRUE, penalty = list(lambda = NULL, c = 1.1, gamma = 0.1/log(n)),
@@ -79,8 +84,8 @@ intercept <- 1
 P <- exp(intercept + X \%*\% beta)/(1+exp(intercept + X \%*\% beta))
 y <- rbinom(length(y), size=1, prob=P)
 ## fit rlassologit object
- rlassologit.reg <- rlassologit(y~X)
- ## methods
+rlassologit.reg <- rlassologit(y~X)
+## methods
 summary(rlassologit.reg, all=F)
 print(rlassologit.reg)
 predict(rlassologit.reg, type='response')

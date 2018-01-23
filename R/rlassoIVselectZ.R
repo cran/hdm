@@ -25,6 +25,7 @@
 #' @references D. Belloni, D. Chen, V. Chernozhukov and C. Hansen (2012).
 #' Sparse models and methods for optimal instruments with an application to
 #' eminent domain. \emph{Econometrica} 80 (6), 2369--2429.
+#' @export
 rlassoIVselectZ <- function(x, ...)
   UseMethod("rlassoIVselectZ") # definition generic function
 
@@ -52,7 +53,8 @@ rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, .
   flag.const <- 0
   for (i in 1:ke) {
     di <- d[, i]
-    lasso.fit <- rlasso(di ~ Z, post = post, intercept = intercept, ...)
+    #lasso.fit <- rlasso(di ~ Z, post = post, intercept = intercept, ...)
+    lasso.fit <- rlasso(y=di, x=Z, post = post, intercept = intercept, ...)
     if (sum(lasso.fit$ind) == 0) {
       dihat <- rep(mean(di), n)  #dihat <- mean(di)
       flag.const <- flag.const + 1
@@ -77,9 +79,9 @@ rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, .
   d <- cbind(d, x)
   
   # calculation coefficients
-  alpha.hat <- solve(t(Dhat) %*% d) %*% (t(Dhat) %*% y)
-  # alpha.hat <- MASS::ginv(t(Dhat)%*%d)%*%(t(Dhat)%*%y) calcualtion of
-  # the variance-covariance matrix
+  #alpha.hat <- solve(t(Dhat) %*% d) %*% (t(Dhat) %*% y)
+  alpha.hat <- MASS::ginv(t(Dhat)%*%d)%*%(t(Dhat)%*%y)
+  # calcualtion of the variance-covariance matrix
   residuals <- y - d %*% alpha.hat
   Omega.hat <- t(Dhat) %*% diag(as.vector(residuals^2)) %*% Dhat  #  Dhat.e <- Dhat*as.vector(residuals);  Omega.hat <- t(Dhat.e)%*%Dhat.e
   Q.hat.inv <- MASS::ginv(t(d) %*% Dhat)  #solve(t(d)%*%Dhat)
@@ -188,4 +190,5 @@ confint.rlassoIVselectZ <- function(object, parm, level = 0.95, ...) {
   print(ci)
   invisible(ci)
 }
+
 

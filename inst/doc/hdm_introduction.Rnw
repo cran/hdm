@@ -36,7 +36,8 @@
 
 \begin{document}
 \begin{abstract}
-The package High-dimensional Metrics (\Rpackage{hdm}) is an evolving collection of statistical methods for estimation and quantification of uncertainty in high-dimensional approximately sparse models. It focuses on providing semi-parametrically efficient estimators, confidence intervals, and significance testing for low-dimensional subcomponents of the high-dimensional parameter vector. This vignette offers a brief introduction and a tutorial to the implemented methods.  \R and the package \Rpackage{hdm} are open-source software projects and can be freely downloaded from CRAN:
+The package High-dimensional Metrics (\Rpackage{hdm}) is an evolving collection of statistical methods for estimation and quantification of uncertainty in high-dimensional approximately sparse models. It focuses on providing confidence intervals and significance testing for (possibly many) low-dimensional subcomponents of the high-dimensional parameter vector. Efficient estimators and uniformly valid confidence intervals for regression coefficients on target variables (e.g., treatment or policy variable) in a high-dimensional approximately sparse regression model, for average treatment effect (ATE) and average treatment effect for the treated (ATET),  as well for extensions of these parameters to the endogenous setting are provided. 
+Theory grounded, data-driven methods for selecting the penalization parameter in Lasso regressions under heteroscedastic and non-Gaussian errors are implemented. Moreover, joint/ simultaneous confidence intervals for regression coefficients of a high-dimensional sparse regression are implemented, including a joint significance test for Lasso regression. Data sets which have been used in the literature and might be useful for classroom demonstration and for testing new estimators are included.  \R and the package \Rpackage{hdm} are open-source software projects and can be freely downloaded from CRAN:
 \texttt{http://cran.r-project.org}.
 \end{abstract}
 
@@ -52,17 +53,17 @@ Analysis of high-dimensional models, models in which the number of parameters to
 
 With increasing availability of such data sets in economics and other data science fields, new methods for analyzing those data have been developed. The \R package \Rpackage{hdm} contains implementations of recently developed methods for high-dimensional approximately sparse models, mainly relying on forms of lasso and post-lasso as well as related estimation and inference methods.  The methods are illustrated with econometric applications, but are also useful in other  disciplines such as medicine, biology, sociology or psychology. 
 
-The methods which are implemented in this package are distinct from already available methods in other packages in the following three major ways: 
+The methods which are implemented in this package are distinct from already available methods in other packages in the following four major ways: 
 \begin{itemize} 
 
 
-\item[\textbf{1)}] First, we provide efficient estimators and  uniformly valid confidence intervals for various low-dimensional causal/structural parameters  appearing in high-dimensional approximately sparse models.   For example, we provide efficient estimators and uniformly valid confidence intervals for a regression coefficient on a target variable (e.g., a treatment or policy variable) in a high-dimensional sparse regression model.  We also provide estimates and confidence intervals for average treatment effect (ATE) and average treatment effect for the treated (ATET),  as well  extensions of these parameters to the endogenous setting.
+\item[\textbf{1)}] First, we provide a version of Lasso regression that expressly handles and allows for non-Gaussian and heteroscedastic errors.
 
+\item[\textbf{2)}] Second, we implement a theoretically grounded, data-driven choice of the penalty level $\lambda$ in the Lasso regressions. To underscore this choice,  we call the Lasso implementation in this package \textquotedblleft rigorous\textquotedblright Lasso (=\code{rlasso}). The prefix \textbf{r} in function names should underscore this. In high-dimensional settings cross-validation is very popular; but it lacks a theoretical justification for use in the present context and some theoretical proposals for the choice of $\lambda$ are often not feasible. Moreover, the theoretically grounded, data-driven choice redundantizes cross-validation which is time-consuming particularly in large data sets.  
 
-\item[\textbf{2)}] Second, we provide theoretically grounded, data-driven choice of the penalty level $\lambda$ in the lasso 
-method. Because of this, we call the resulting method the \textquotedblleft rigorous\textquotedblright\ lasso (=\code{rlasso}). The prefix \textbf{r} in function names should underscore this. In high-dimensions setting cross-validation is very popular, but it lacks a theoretical justification and some theoretical proposals for the choice of $\lambda$ are often not feasible.
+\item[\textbf{3)}] Third, we provide efficient estimators and  uniformly valid confidence intervals for various low-dimensional causal/structural parameters  appearing in high-dimensional approximately sparse models. For example, we provide efficient estimators and uniformly valid confidence intervals for a regression coefficient on a target variable (e.g., a treatment or policy variable) in a high-dimensional sparse regression model. Target variable in this context means the object not interest, e.g. a prespecified regression coefficient. We also provide estimates and confidence intervals for average treatment effect (ATE) and average treatment effect for the treated (ATET),  as well  extensions of these parameters to the endogenous setting.
 
-\item[\textbf{3)}] Third, we provide a version of lasso for linear regressions specifically that expressly handles non-Gaussian and heteroskedastic errors.
+\item[\textbf{4)}] Fourth, joint/ simultaneous confidence intervals for estimated coefficients in a  high-dimensional approximately sparse models are provided, based on the methods and theory developed in \cite{BCK2014}. They proposed uniformly valid confidence regions for regressions coefficients in a high-dimensional sparse Z-estimation problems, which include median, mean, and many other regression problems as special cases. In this article we apply this method to the coefficients of a Lasso regression and highlight this method with an empirical example.
 
 \end{itemize}
 
@@ -78,7 +79,7 @@ website along with its associated documentation. The \R package \Rpackage{hdm} c
 library(knitr)
 knitr::opts_chunk$set(warning = FALSE)
 
-opts_chunk$set(tidy=TRUE, tidy.opts=list(width.cutoff=60)) #{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+opts_chunk$set(tidy=TRUE, tidy.opts=list(width.cutoff=80)) #{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 
 # # source: https://github.com/yihui/knitr-examples/blob/master/077-wrap-output.Rmd
 # knitr::opts_chunk$set(linewidth = NULL)
@@ -291,7 +292,7 @@ The method \texttt{summary} of \texttt{rlasso}-objects displays additionally for
 
 \subsection*{Example}(Prediction Using Lasso and Post-Lasso) Consider generated data from a sparse linear model:
 <<DGP_lasso1>>=
-set.seed(1)
+set.seed(12345)
 n = 100 #sample size
 p = 100 # number of variables
 s = 3 # nubmer of variables with non-zero coefficients
@@ -476,7 +477,7 @@ confint(lasso.effect)
 
 The two methods are first-order equivalent in both low-dimensional and high-dimensional settings under regularity conditions.  Not surprisingly we see that in the numerical example of this section, the estimates and standard errors produced by the two methods are very close to each other.  
 
-It is also possible to estimate joint confidence intervals. The method relies on a multiplier bootstrap method as described in \cite{BCK2014}. Joint confidence intervals can be invoked by setting the option \code{joint} to \code{TRUE} in the method \code{confint} for objects of class \code{rlassoEffects}.
+It is also possible to estimate joint confidence intervals. The method relies on a multiplier bootstrap method as described in \cite{BCK2014}. Joint confidence intervals can be invoked by setting the option \code{joint} to \code{TRUE} in the method \code{confint} for objects of class \code{rlassoEffects}. We will also demonstrate the application of joint confidence intervals in an empirical application in the next section.
 
 <<joint_Estimation_inference>>=
 confint(lasso.effect, level=0.95, joint=TRUE)
@@ -489,6 +490,53 @@ plot(lasso.effect, main="Confidence Intervals")
 @
 
 For logistic regression we provide the functions \code{rlassologit} and \code{rlassologitEffects}. Further information can be found in the help.
+
+\subsection{Application: the effect of gender on wage}
+In Labour Economics an important question is how the wage is related to the gender of the employed. We use US census data from the year 2012 to analyse the effect of gender and interaction effects of other variables with gender on wage jointly. The dependent variable is the logarithm of the wage, the target variable is \texttt{female} (in combination with other variables). All other variables denote some other socio-economic characteristics, e.g. marital status, education, and experience.  For a detailed description of the variables we refer to the help page.
+
+First, we load and prepare the data.
+<<cps_example>>=
+library(hdm)
+data(cps2012)
+X <- model.matrix( ~ -1 + female + female:(widowed + divorced + separated + nevermarried  + 
+hsd08+hsd911+ hsg+cg+ad+mw+so+we+exp1+exp2+exp3) + 
++ (widowed + divorced + separated + nevermarried  +
+ hsd08+hsd911+ hsg+cg+ad+mw+so+we+exp1+exp2+exp3)^2, data=cps2012)
+dim(X)
+X <- X[,which(apply(X, 2, var)!=0)] # exclude all constant variables
+dim(X)
+index.gender <- grep("female", colnames(X))
+y <- cps2012$lnw
+@
+
+The parameter estimates for the target parameters, i.e. all coefficients related to gender (i.e. by interaction with other variables) are calculated and summarized by the following commands
+
+<<Joint_Estimation>>=
+effects.female <- rlassoEffects(x=X, y=y, index=index.gender)
+summary(effects.female)
+@
+
+
+Finally, we estimate and plot confident intervals, first "pointwise" and then the joint confidence intervals.
+
+<<CPS_example>>=
+joint.CI <- confint(effects.female, level = 0.95, joint = TRUE)
+joint.CI
+# plot(effects.female, joint=TRUE, level=0.95) # plot of the effects
+@
+
+This analysis allows a closer look how discrimination according to gender is related to other socio-economic variables.
+
+As a side remark, the version 0.2 allows also now a formula interface for many functions including \texttt{rlassoEffects}. Hence, the analysis could also be done more compact as
+<<CPS_Example_formula, eval=FALSE>>=
+effects.female <- rlassoEffects(lnw ~ female + female:(widowed + divorced + separated + nevermarried  + 
+hsd08+hsd911+ hsg+cg+ad+mw+so+we+exp1+exp2+exp3)+ 
+(widowed + divorced + separated + nevermarried  + 
+hsd08+hsd911+ hsg+cg+ad+mw+so+we+exp1+exp2+exp3)^2, data=cps2012,
+I = ~  female + female:(widowed + divorced + separated + nevermarried  +
+ hsd08+hsd911+ hsg+cg+ad+mw+so+we+exp1+exp2+exp3))
+@
+The one-sided option \texttt{I} gives the target variables for which inference is conducted.
 
 \subsection{Application: Estimation of the treatment effect in a linear model with many confounding factors}
 
@@ -683,10 +731,12 @@ characteristics of judges serving on federal appellate panels can only be relate
 First, we load the data an construct the matrices with the controls (x), instruments (z), outcome (y), and treatment variables (d). Here we consider regional GDP as the outcome variable. 
 <<lassoIV>>=
 data(EminentDomain)
-z <- EminentDomain$logGDP$z
-x <- EminentDomain$logGDP$x
+z <- as.matrix(EminentDomain$logGDP$z)
+x <- as.matrix(EminentDomain$logGDP$x)
 y <- EminentDomain$logGDP$y
 d <- EminentDomain$logGDP$d
+x <- x[,apply(x, 2, mean, na.rm=TRUE) > 0.05] #
+z <- z[,apply(z, 2, mean, na.rm=TRUE) > 0.05] # 
 @
 As mentioned above, $y$ is the economic outcome, the logarithm of the GDP, $d$  the number of pro plaintiff appellate takings decisions in federal circuit court $c$ and year $t$, $x$ is a matrix with control variables, and $z$ is the matrix with instruments. Here we consider socio-economic and demographic characteristics of the judges as instruments.
 

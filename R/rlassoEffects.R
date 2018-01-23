@@ -51,6 +51,7 @@
 #' print(lasso.effect)
 #' summary(lasso.effect)
 #' confint(lasso.effect)
+#' plot(lasso.effect)
 # library(hdm)
 # ## DGP
 # n <- 250
@@ -172,8 +173,9 @@ rlassoEffects.formula <- function(formula, data, I, method = "partialling out",
   cn <- attr(mt, "term.labels")
   try(if (is.matrix(eval(parse(text=cn)))) cn <- colnames(eval(parse(text=cn))), silent=TRUE)
   I.c <- check_variables(I, cn)
+  I.c <- grep(cn[I.c],colnames(X))
   I3 <- check_variables(included, cn)
-  
+  I3 <- grep(cn[I.c],colnames(X))
   #if (length(intersect(I.c, I3) != 0)) 
   #  stop("I and included should not contain the same variables!")
   
@@ -376,28 +378,26 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
     v <- object$residuals$v
     ev <- e*v
     Ev2 <- colMeans(v^2)
-    Ee2v2 <- colMeans(ev^2)
     Omegahat <- matrix(NA, ncol=k, nrow=k)
     for (j in 1:k) {
       for (l in 1:k) {
         Omegahat[j,l] = Omegahat[l,j] = 1/(Ev2[j]*Ev2[l]) * mean(ev[,j]*ev[,l])
-        }
+      }
     }
     var <- diag(Omegahat)
-    Beta <- matrix(NA, ncol=B, nrow=k)
     sim <- vector("numeric", length = B)
     for (i in 1:B) {
       beta_i <- MASS::mvrnorm(mu = rep(0,k), Sigma=Omegahat/n)
-      sim[i] <- max(abs(sqrt(n)*beta_i/var))
+      sim[i] <- max(abs(beta_i/sqrt(var)))
     }
     a <- (1 - level)/2
     ab <- c(a, 1 - a)
     pct <- format.perc(ab, 3)
-    ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
+    ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm,
                                                                pct))
     hatc <- quantile(sim, probs = 1 - a)
-    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sqrt(var)
-    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sqrt(var)
+    ci[, 1] <- cf[parm] - hatc * sqrt(var)
+    ci[, 2] <- cf[parm] + hatc * sqrt(var)
   }
   return(ci)
 }
@@ -455,7 +455,7 @@ plot.rlassoEffects <- function(x, joint=FALSE, level= 0.95, main = "", xlab = "c
   # layout
   plotobject <- plotobject + ggplot2::theme_bw() + ggplot2::geom_blank() + 
     ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(), panel.grid.minor.x = ggplot2::element_blank())
-  plotobject <- plotobject + scale_x_discrete(labels = abbreviate)
+  plotobject <- plotobject + ggplot2::scale_x_discrete(labels = abbreviate)
   # plot
   plotobject
 }
