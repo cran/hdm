@@ -30,4 +30,3 @@ data(BLP)
 C. B. Mulligan and Y. Rubinstein (2008). Selection, investment, and women's relative wages over time. The Quarterly Journal of Economics, 1061--1110.
 }
 \keyword{datasets}
-

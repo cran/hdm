@@ -1,10 +1,12 @@
+library(testthat)
 context("Test rlasso")
 library(hdm)
-library(testthat)
+
 
 DGP_rlasso <- function(n, p, px){
   
   X <- matrix(rnorm(n*p), ncol=p)
+  colnames(X) <- paste("x", 1:p, sep="")
   beta <- c(rep(2,px), rep(0,p-px))
   intercept <- 1
   y <- intercept + X %*% beta + rnorm(n)
@@ -16,7 +18,7 @@ DGP_rlasso <- function(n, p, px){
 set.seed(2)
 ret <- DGP_rlasso(200, 100, 10)
 X <- ret$X
-y <- ret$y
+y <- as.vector(ret$y)
 beta <- ret$beta
 frame <- as.data.frame(cbind(y, X))
 colnames(frame) <- c("y", paste0("x", 1:100))
@@ -68,18 +70,18 @@ test_that("rlasso - Input check control",{
 })
 
 test_that("rlasso - check methods",{
-  expect_that(summary(rlasso(X, y), all = FALSE), not(throws_error()))
-  expect_that(print(rlasso(X, y)), not(throws_error()))
-  expect_that(model.matrix(rlasso(X, y)), not(throws_error()))
-  expect_that(model.matrix(rlasso(y ~ X)), not(throws_error()))
-  expect_that(model.matrix(rlasso(y ~ ., data = frame)), not(throws_error()))
-  expect_that(predict(rlasso(X, y)), not(throws_error()))
-  expect_that(predict(rlasso(X, y, intercept = FALSE)), not(throws_error()))
-  expect_that(predict(rlasso(y ~ X)), not(throws_error()))
-  expect_that(predict(rlasso(y ~ ., data = frame)), not(throws_error()))
-  expect_that(predict(rlasso(X, y), as.data.frame(2 * X)), not(throws_error()))
-  expect_that(predict(rlasso(y ~ X), as.data.frame(2 * X)), not(throws_error()))
-  expect_that(predict(rlasso(y ~ ., data = frame), as.data.frame(2 * X)), not(throws_error()))
+  expect_error(summary(rlasso(X, y), all = FALSE), NA)
+  expect_error(print(rlasso(X, y)), NA)
+  expect_error(model.matrix(rlasso(X, y)), NA)
+  expect_error(model.matrix(rlasso(y ~ X)), NA)
+  expect_error(model.matrix(rlasso(y ~ ., data = frame)), NA)
+  expect_error(predict(rlasso(X, y)), NA)
+  expect_error(predict(rlasso(X, y, intercept = FALSE)), NA)
+  expect_error(predict(rlasso(y ~ X)), NA)
+  expect_error(predict(rlasso(y ~ ., data = frame)), NA)
+  expect_error(predict(rlasso(X, y), as.data.frame(2 * X)), NA)
+  expect_error(predict(rlasso(y ~ X), as.data.frame(2 * X)), NA)
+  expect_error(predict(rlasso(y ~ ., data = frame), as.data.frame(2 * X)), NA)
   #expect_that(predict(rlasso(y ~ ., data = frame), cbind(frame, rnorm(nrow(frame)))), not(throws_error()))
 })
 

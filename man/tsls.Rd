@@ -49,4 +49,3 @@ for outcome variable \code{y} where \code{d} are endogenous variables in structu
 structural equation and z are instruments. It returns an object of class \code{tsls} for which the methods \code{print} and \code{summary} 
 are provided.
 }
-

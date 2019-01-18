@@ -36,4 +36,3 @@ data(BLP)
 S. Berry, J. Levinsohn, A. Pakes (1995). Automobile Prices in Market EquilibriumD. Econometrica, 63(4), 841--890.
 }
 \keyword{datasets}
-

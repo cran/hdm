@@ -2,9 +2,9 @@
 % Please edit documentation in R/rlassologit.R
 \name{rlassologit}
 \alias{rlassologit}
+\alias{rlassologit.formula}
 \alias{rlassologit.character}
 \alias{rlassologit.default}
-\alias{rlassologit.formula}
 \title{rlassologit: Function for logistic Lasso estimation}
 \usage{
 rlassologit(x, ...)
@@ -99,4 +99,3 @@ Belloni, A., Chernozhukov and Y. Wei (2013). Honest confidence regions for logis
 \keyword{lasso}
 \keyword{logistic}
 \keyword{regression}
-

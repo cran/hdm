@@ -17,6 +17,8 @@ rlassoIVselectZ(x, ...)
 \arguments{
 \item{x}{exogenous variables in the structural equation (matrix)}
 
+\item{\dots}{arguments passed to the function \code{rlasso}.}
+
 \item{d}{endogenous variables in the structural equation (vector or matrix)}
 
 \item{y}{outcome or dependent variable in the structural equation (vector or matrix)}
@@ -33,14 +35,12 @@ d endogenous variable, z instrumental variables, and x exogenous variables.}
 
 \item{data}{An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
 If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIVselectZ} is called.}
-
-\item{\dots}{arguments passed to the function \code{rlasso}.}
 }
 \value{
 An object of class \code{rlassoIVselectZ} containing at least the following
 components: \item{coefficients}{estimated parameter vector}
 \item{vcov}{variance-covariance matrix} \item{residuals}{
-residuals} \item{samplesize}{sample size}
+residuals} \item{samplesize}{sample size} \item{selected}{matrix of selected variables in the first stage for each endogenous variable}
 }
 \description{
 This function selects the instrumental variables in the first stage by
@@ -59,4 +59,3 @@ D. Belloni, D. Chen, V. Chernozhukov and C. Hansen (2012).
 Sparse models and methods for optimal instruments with an application to
 eminent domain. \emph{Econometrica} 80 (6), 2369--2429.
 }
-

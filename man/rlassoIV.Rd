@@ -2,6 +2,7 @@
 % Please edit documentation in R/rlassoIV.R
 \name{rlassoIV}
 \alias{rlassoIV}
+\alias{rlassoIVmult}
 \alias{rlassoIV.default}
 \alias{rlassoIV.formula}
 \alias{rlassoIVmult}
@@ -21,6 +22,8 @@ rlassoIVmult(x, d, y, z, select.Z = TRUE, select.X = TRUE, ...)
 \arguments{
 \item{x}{matrix of exogenous variables}
 
+\item{\dots}{arguments passed to the function \code{rlasso}}
+
 \item{d}{endogenous variable}
 
 \item{y}{outcome / dependent variable (vector or matrix)}
@@ -38,8 +41,6 @@ d endogenous variable, z instrumental variables, and x exogenous variables.}
 
 \item{data}{an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
 If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIV} is called.}
-
-\item{\dots}{arguments passed to the function \code{rlasso}}
 }
 \value{
 an object of class \code{rlassoIV} containing at least the following
@@ -76,4 +77,3 @@ V. Chernozhukov, C. Hansen, M. Spindler (2015). Post-selection
 and post-regularization inference in linear models with many controls and
 instruments. American Economic Review: Paper & Proceedings 105(5), 486--490.
 }
-

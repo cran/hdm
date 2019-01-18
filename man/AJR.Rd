@@ -31,4 +31,3 @@ D. Acemoglu, S. Johnson, J. A. Robinson  (2001). Colonial origins of comparative
 American Economic Review, 91, 1369--1401.
 }
 \keyword{datasets}
-

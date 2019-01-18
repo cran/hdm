@@ -72,7 +72,7 @@ rlassoEffects <- function(x, ...)
 #' @export
 #' @rdname rlassoEffects
 rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partialling out", 
-                          I3 = NULL, post = TRUE, ...) {
+                                  I3 = NULL, post = TRUE, ...) {
   
   checkmate::checkChoice(method, c("partialling out", "double selection"))
   
@@ -118,9 +118,10 @@ rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partiall
   lasso.regs <- vector("list", k)
   reside <- matrix(NA, nrow = n, ncol = p1)
   residv <- matrix(NA, nrow = n, ncol = p1)
-  coef.mat <- NULL
-  names(coefficients) <- names(se) <- names(t) <- names(pval) <- names(lasso.regs) <- colnames(reside) <- colnames(residv) <- colnames(x)[index]
-  
+  coef.mat <- list()
+  selection.matrix <- matrix(NA, ncol = k, nrow = dim(x)[2])
+  names(coefficients) <- names(se) <- names(t) <- names(pval) <- names(lasso.regs) <- colnames(reside) <- colnames(residv) <- colnames(selection.matrix) <- colnames(x)[index]
+  rownames(selection.matrix) <- colnames(x)
   for (i in 1:k) {
     d <- x[, index[i], drop = FALSE]
     Xt <- x[, -index[i], drop = FALSE]
@@ -136,14 +137,15 @@ rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partiall
       pval[i] <- col$pval
       reside[, i] <- col$residuals$epsilon
       residv[, i] <- col$residuals$v
-      coef.mat <- cbind(coef.mat, col$coefficients.reg)
+      coef.mat[[i]] <- col$coefficients.reg
+      selection.matrix[-index[i],i] <- col$selection.index
     }
   }
   #colnames(coef.mat) <- colnames(x)[index]
   residuals <- list(e = reside, v = residv)
   res <- list(coefficients = coefficients, se = se, t = t, pval = pval, 
               lasso.regs = lasso.regs, index = index, call = match.call(), samplesize = n, 
-              residuals = residuals, coef.mat = coef.mat)
+              residuals = residuals, coef.mat = coef.mat, selection.matrix = selection.matrix)
   class(res) <- "rlassoEffects"
   return(res)
 }
@@ -156,7 +158,7 @@ rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partiall
 #' If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
 #' @export
 rlassoEffects.formula <- function(formula, data, I, method = "partialling out", 
-                              included = NULL, post = TRUE, ...) {
+                                  included = NULL, post = TRUE, ...) {
   cl <- match.call()
   if (missing(data))  data <- environment(formula)
   mf <- match.call(expand.dots = FALSE)
@@ -173,14 +175,16 @@ rlassoEffects.formula <- function(formula, data, I, method = "partialling out",
   cn <- attr(mt, "term.labels")
   try(if (is.matrix(eval(parse(text=cn)))) cn <- colnames(eval(parse(text=cn))), silent=TRUE)
   I.c <- check_variables(I, cn)
-  I.c <- grep(cn[I.c],colnames(X))
+  #I.c <- grep(cn[I.c],colnames(X))
+  I.c <- which(colnames(X) %in% cn[I.c])
   I3 <- check_variables(included, cn)
-  I3 <- grep(cn[I.c],colnames(X))
+  #I3 <- grep(cn[I.c],colnames(X))
+  I3 <- which(colnames(X) %in% cn[I.c])
   #if (length(intersect(I.c, I3) != 0)) 
   #  stop("I and included should not contain the same variables!")
   
   est <- rlassoEffects(x, y, index = I.c, method = method, 
-                                I3 = I3, post = post, ...)
+                       I3 = I3, post = post, ...)
   est$call <- cl
   return(est)
 }
@@ -209,6 +213,7 @@ rlassoEffect <- function(x, y, d, method = "double selection", I3 = NULL,
     } else {
       I <- I1 + I2
       I <- as.logical(I)
+      names(I) <- union(names(I1),names(I2))
     }
     if (sum(I) == 0) {
       I <- NULL
@@ -244,23 +249,29 @@ rlassoEffect <- function(x, y, d, method = "double selection", I3 = NULL,
     names(se) <- colnames(d)
     results <- list(alpha = alpha, se = se, t = tval, pval = pval, 
                     no.selected = no.selected, coefficients = alpha, coefficient = alpha, 
-                    coefficients.reg = coef(reg1), residuals = res, call = match.call(), 
+                    coefficients.reg = coef(reg1), selection.index = I, residuals = res, call = match.call(), 
                     samplesize = n)
   }
   
   if (method == "partialling out") {
-    yr <- rlasso(y ~ x, post = post, ...)$residuals
-    dr <- rlasso(d ~ x, post = post, ...)$residuals
-    reg1 <- lm(yr ~ dr)
-    alpha <- coef(reg1)[2]
-    var <- vcov(reg1)[2, 2]
+    reg1 <- rlasso(y ~ x, post = post, ...)
+    yr <- reg1$residuals
+    reg2 <- rlasso(d ~ x, post = post, ...)
+    dr <- reg2$residuals
+    reg3 <- lm(yr ~ dr)
+    alpha <- coef(reg3)[2]
+    var <- vcov(reg3)[2, 2]
     se <- sqrt(var)
     tval <- alpha/sqrt(var)
     pval <- 2 * pnorm(-abs(tval))
-    res <- list(epsilon = reg1$residuals, v = dr)
+    res <- list(epsilon = reg3$residuals, v = dr)
+    I1 <- reg1$index
+    I2 <- reg2$index
+    I <- as.logical(I1 + I2)
+    names(I) <- union(names(I1),names(I2))
     results <- list(alpha = unname(alpha), se = drop(se), t = unname(tval), 
                     pval = unname(pval), coefficients = unname(alpha), coefficient = unname(alpha), 
-                    coefficients.reg = coef(reg1), residuals = res, call = match.call(), 
+                    coefficients.reg = coef(reg1), selection.index = I, residuals = res, call = match.call(), 
                     samplesize = n)
   }
   class(results) <- "rlassoEffects"
@@ -385,19 +396,20 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
       }
     }
     var <- diag(Omegahat)
+    names(var) <- names(cf)
     sim <- vector("numeric", length = B)
     for (i in 1:B) {
       beta_i <- MASS::mvrnorm(mu = rep(0,k), Sigma=Omegahat/n)
       sim[i] <- max(abs(beta_i/sqrt(var)))
     }
-    a <- (1 - level)/2
-    ab <- c(a, 1 - a)
+    a <- (1 - level) #not dividing by 2!
+    ab <- c(a/2, 1 - a/2)
     pct <- format.perc(ab, 3)
     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm,
                                                                pct))
     hatc <- quantile(sim, probs = 1 - a)
-    ci[, 1] <- cf[parm] - hatc * sqrt(var)
-    ci[, 2] <- cf[parm] + hatc * sqrt(var)
+    ci[, 1] <- cf[parm] - hatc * sqrt(var[parm])
+    ci[, 2] <- cf[parm] + hatc * sqrt(var[parm])
   }
   return(ci)
 }
@@ -438,11 +450,11 @@ plot.rlassoEffects <- function(x, joint=FALSE, level= 0.95, main = "", xlab = "c
   # generate points
   plotobject <- ggplot2::ggplot(coefmatrix, ggplot2::aes(y = coef, x = factor(names, 
                                                                               levels = names))) + ggplot2::geom_point(colour = col) + 
-  ggplot2::geom_hline(colour = col, ggplot2::aes(width = 0.1, h = 0, yintercept=0))
+    ggplot2::geom_hline(colour = col, ggplot2::aes(width = 0.1, h = 0, yintercept=0))
   
   # generate errorbars (KIs)
   plotobject <- plotobject + ggplot2::geom_errorbar(ymin = coefmatrix$lower, 
-                                                    ymax = coefmatrix$uppe, colour = col)
+                                                    ymax = coefmatrix$upper, colour = col)
   
   # further graphic parameter
   plotobject <- plotobject + ggplot2::ggtitle(main) + ggplot2::ylim(low, 
@@ -508,4 +520,134 @@ print.summary.rlassoEffects <- function(x, digits = max(3L, getOption("digits") 
   }
   cat("\n")
   invisible(table)
+}
+
+
+#' Coefficients from S3 objects \code{rlassoEffects}
+#'
+#' Method to extract coefficients from objects of class \code{rlassoEffects}
+#' 
+#' Printing coefficients and selection matrix for S3 object \code{rlassoEffects}
+#' 
+#' @param object an object of class \code{rlassoEffects}, usually a result of a call \code{rlassoEffect} or \code{rlassoEffects}.
+#' @param selection.matrix if TRUE, a selection matrix is returned that indicates the selected variables from each auxiliary regression. 
+#' Default is set to FALSE. 
+#' @param include.targets if FALSE (by default) only the selected control variables are listed in the \code{selection.matrix}. If set to TRUE, 
+#' the selection matrix will also indicate the selection of the target coefficients that are specified in the  \code{rlassoEffects} call. 
+#' @param complete general option of the function \code{coef}.
+#' @param ... further arguments passed to functions coef or print. 
+#' @rdname coef.rlassoEffects
+#' @export
+coef.rlassoEffects <- function(object, complete = TRUE, selection.matrix = FALSE, include.targets = FALSE, ...) {
+  
+  cf <- object$coefficients
+  
+  if (selection.matrix == TRUE) {
+    
+    mat <- object$selection.matrix
+    
+    if (is.null(mat)) {
+      mat <- cbind(object$selection.index)
+      dmat2 <- dim(mat)[2]
+      rnames <- rownames(mat)
+      targetindx <- stats::complete.cases(mat)
+    }
+    
+    else {
+      dmat2 <- dim(mat)[2]
+      rnames <- rownames(mat)
+      targetindx <- stats::complete.cases(mat)
+      mat <- cbind(mat, as.logical(apply(mat, 1, sum)))
+      colnames(mat)[dim(mat)[2]] <- "global"
+    }
+    
+    if (include.targets == FALSE) {
+      mat <- mat[targetindx, , drop = FALSE]
+      rnames <- rownames(mat)
+    }
+    
+    else{
+      mat <- rbind(mat[targetindx == FALSE, , drop = FALSE], mat[targetindx, , drop = FALSE])
+      rnames <- rownames(mat)
+    }
+    
+    mat <- rbind(mat, apply(mat, 2, sum, na.rm = TRUE))
+    mat <- apply(mat, 2, function(x) gsub(1, "x", x))
+    mat <- apply(mat, 2, function(x) gsub(0, ".", x))
+    mat[is.na(mat)] <- "-"
+    rownames(mat) <- c(rnames, "sum")
+    
+    if (complete) {
+      
+      coef <- list(cf = cf, selection.matrix = mat)
+      return(coef)
+    }
+    
+    else {
+      coef <- list(cf = cf[!is.na(cf)], selection.matrix = mat)
+      return(coef)
+    } 
+  }
+  
+  else {
+    
+    if (complete) {
+      return(cf)
+    }
+    
+    else {
+      return(cf[!is.na(cf)])
+    } 
+  }
+  
+}
+
+
+#' Printing coefficients from S3 objects \code{rlassoEffects}
+#'
+#' Printing coefficients for class \code{rlassoEffects}
+#' 
+#' Printing coefficients and selection matrix for S3 object \code{rlassoEffects}
+#' 
+#' @param x an object of class \code{rlassoEffects}, usually a result of a call \code{rlassoEffect} or \code{rlassoEffects}.
+#' @param selection.matrix if TRUE, a selection matrix is returned that indicates the selected variables from each auxiliary regression. 
+#' Default is set to FALSE. 
+#' @param include.targets if FALSE (by default) only the selected control variables are listed in the \code{selection.matrix}. If set to TRUE, 
+#' the selection matrix will also indicate the selection of the target coefficients that are specified in the  \code{rlassoEffects} call. 
+#' @param complete general option of the function \code{coef}.
+#' @param ... further arguments passed to functions coef or print. 
+#' @rdname print_coef
+#' @aliases print_coef.rlassoEffects
+#' @export
+print_coef <-  function(x, ...){
+  UseMethod("print_coef")
+}
+
+
+#' @rdname print_coef 
+#' @export
+print_coef.rlassoEffects <- function(x, complete = TRUE, selection.matrix = FALSE, include.targets = TRUE,  ...) {
+  checkmate::check_class(x, "rlassoEffects")
+  
+  if (selection.matrix == FALSE) {
+    cat("\n")
+    print("Estimated target coefficients")
+    print(coef(x), complete = complete, ...)
+    cat("\n")
+  }
+  
+  else {
+    sel.mat <- coef(x, selection.matrix = selection.matrix, include.targets = include.targets, complete = complete, ...)
+    cat("\n")
+    print("Estimated target coefficients")
+    print(sel.mat$cf)
+    cat("\n")
+    print("Matrix with selection index from auxiliary regressions")
+    cat("\n")
+    print(sel.mat$selection.matrix)
+    cat("_ _ _ \n")
+    print("'-' indicates a target variable; ")
+    print("'x' indicates that a variable has been selected with rlassoEffects (coefficient is different from zero);") 
+    print("'o' indicates that a variable has been de-selected with rlassoEffects (coefficient is zero).")
+  }
 }

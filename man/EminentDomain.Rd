@@ -54,4 +54,3 @@ Sparse models and methods for optimal instruments with an application to
 eminent domain. \emph{Econometrica} 80 (6), 2369--2429.
 }
 \keyword{datasets}
-

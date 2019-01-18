@@ -2,11 +2,11 @@
 % Please edit documentation in R/pkg-package.R
 \docType{data}
 \name{pension}
-\alias{401(k)}
-\alias{data}
 \alias{pension}
+\alias{401(k)}
 \alias{plans}
 \alias{wealth}
+\alias{data}
 \title{Pension 401(k) data set}
 \format{Dataframe with the following variables (amongst others): \describe{
 \item{p401}{participation in 401(k)}
@@ -57,4 +57,3 @@ evaluation with high-dimensional data. Working Paper.
 \keyword{401(k)}
 \keyword{datasets}
 \keyword{pension}
-

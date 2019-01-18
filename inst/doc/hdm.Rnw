@@ -59,7 +59,8 @@ The methods which are implemented in this package are distinct from already avai
 
 \item[\textbf{1)}] First, we provide a version of Lasso regression that expressly handles and allows for non-Gaussian and heteroscedastic errors.
 
-\item[\textbf{2)}] Second, we implement a theoretically grounded, data-driven choice of the penalty level $\lambda$ in the Lasso regressions. To underscore this choice,  we call the Lasso implementation in this package \textquotedblleft rigorous\textquotedblright Lasso (=\code{rlasso}). The prefix \textbf{r} in function names should underscore this. In high-dimensional settings cross-validation is very popular; but it lacks a theoretical justification for use in the present context and some theoretical proposals for the choice of $\lambda$ are often not feasible. Moreover, the theoretically grounded, data-driven choice redundantizes cross-validation which is time-consuming particularly in large data sets.  
+\item[\textbf{2)}] Second, we implement a theoretically grounded, data-driven choice of the penalty level $\lambda$ in the Lasso regressions. To underscore this choice,  we call the Lasso implementation in this package \textquotedblleft rigorous\textquotedblright Lasso (=\code{rlasso}). The prefix \textbf{r} in function names should underscore this. In high-dimensional settings cross-validation is very popular; but it lacks a theoretical justification for use in the present context and some theoretical proposals for the choice of $\lambda$ are often not feasible.
+%Moreover, the theoretically grounded, data-driven choice redundantizes cross-validation which is time-consuming particularly in large data sets.  
 
 \item[\textbf{3)}] Third, we provide efficient estimators and  uniformly valid confidence intervals for various low-dimensional causal/structural parameters  appearing in high-dimensional approximately sparse models. For example, we provide efficient estimators and uniformly valid confidence intervals for a regression coefficient on a target variable (e.g., a treatment or policy variable) in a high-dimensional sparse regression model. Target variable in this context means the object not interest, e.g. a prespecified regression coefficient. We also provide estimates and confidence intervals for average treatment effect (ATE) and average treatment effect for the treated (ATET),  as well  extensions of these parameters to the endogenous setting.
 
@@ -159,7 +160,7 @@ Consider high dimensional approximately sparse linear regression models. These m
 The model reads \[ y_i = x_i' \beta_0  + \varepsilon_i, \quad \mathbb{E}[\varepsilon_i x_i]=0, \quad \beta_0 \in \mathbb{R}^p, 
 \quad i=1,\ldots,n \]
 where $y_i$ are observations of the response variable, $x_i=(x_{i,j}, \ldots, x_{i,p})$'s are observations of $p-$dimensional  regressors, and $\varepsilon_i$'s are centered disturbances, where possibly $p \gg n$.   Assume that the data sequence is
-i.i.d. for the sake of exposition, although the framework covered is considerably more general. An important point is that the errors $\varepsilon_i$ may be non-Gaussian or heteroskedastic \citep{BCCH12}.
+i.i.d. for the sake of exposition, although the framework covered is considerably more general. An important point is that the errors $\varepsilon_i$ may be non-Gaussian or heteroscedastic \citep{BCCH12}.
 
 
 
@@ -182,7 +183,7 @@ with sparsity index \[s \propto n^{1/(2 \mathsf{a}(\beta_0))}.\]
 In order to get  theoretically justified performance guarantees,  we consider the Lasso 
 estimator with data-driven penalty loadings: 
 \[ \hat \beta = \arg \min_{\beta \in  \mathbb{R}^p} \mathbb{E}_n [(y_i - x_i' \beta)^2] + \frac{\lambda}{n} ||\hat{\Psi} \beta||_1 \]
-where $||\beta||_1=\sum_{j=1}^p |\beta_j|$, $\hat{\Psi}=\mathrm{diag}(\hat{\psi}_1,\ldots,\hat{\psi}_p)$ is a diagonal matrix consisting of  penalty loadings, and $\mathbb{E}_n$ abbreviates the empirical average. The penalty loadings are chosen to insure basic equivariance of coefficient estimates to rescaling of $x_{i,j}$ and can also be chosen to address heteroskedasticity in model errors.   We discuss the choice of $\lambda$ and $\hat \Psi$ below.
+where $||\beta||_1=\sum_{j=1}^p |\beta_j|$, $\hat{\Psi}=\mathrm{diag}(\hat{\psi}_1,\ldots,\hat{\psi}_p)$ is a diagonal matrix consisting of  penalty loadings, and $\mathbb{E}_n$ abbreviates the empirical average. The penalty loadings are chosen to insure basic equivariance of coefficient estimates to rescaling of $x_{i,j}$ and can also be chosen to address heteroscedasticity in model errors.   We discuss the choice of $\lambda$ and $\hat \Psi$ below.
 
 Regularization by the $\ell_1$-norm naturally helps the Lasso estimator to avoid overfitting, but it also shrinks the fitted coefficients towards zero, causing a potentially significant bias. In order to remove some of this bias,  consider the Post-Lasso estimator that applies ordinary least squares to the model $\hat{T}$ selected by Lasso, formally, 
 \[ \hat{T} = \text{support}(\hat{\beta}) = \{ j \in \{ 1, \ldots,p\}: \lvert \hat{\beta} \rvert >0 \}. \]
@@ -211,7 +212,7 @@ where
 \[ \Lambda(1-\gamma|X)=(1-\gamma)-\text{quantile of}\quad n||\mathbb{E}_n[x_i e_i] ||_{\infty}|X,\]
 where $X=[x_1, \ldots, x_n]'$ and $e_i$ are iid $N(0,1)$, generated independently from $X$; this quantity  is approximated by simulation. The $X$-independent penalty is more conservative than the $X$-dependent penalty. In particular the $X$-dependent penalty automatically adapts to highly correlated designs, using less aggressive penalization in this case \citet{BCH2011:InferenceGauss}.
 
-\underline{In the case of heteroskedasticity}, the loadings are set to $\hat{\psi}_j=\sqrt{\mathbb{E}_n[x_{ij}^2 \hat \varepsilon_i^2]}$, where $\hat \varepsilon_i$ are preliminary estimates of the errors. The penalty level
+\underline{In the case of heteroscedasticity}, the loadings are set to $\hat{\psi}_j=\sqrt{\mathbb{E}_n[x_{ij}^2 \hat \varepsilon_i^2]}$, where $\hat \varepsilon_i$ are preliminary estimates of the errors. The penalty level
 can be $X$-independent \citep{BCCH12}:
 \[ \lambda = 2c \sqrt{n} \Phi^{-1} (1-\gamma/(2p)), \]
 or it can be X-dependent and estimated by a multiplier bootstrap procedure \citep{CCK:AOS13}:
@@ -249,7 +250,7 @@ Estimation proceeds by iteration.  The estimates of residuals $\hat \varepsilon_
 % \[ \Lambda(1-\gamma|X)=(1-\gamma)-\text{quantile of}\quad n||\mathbb{E}_n[x_i e_i] ||_{\infty}|X,\]
 % where $X=[x_1, \ldots, x_n]'$ and $e_i$ are iid $N(0,1)$, generated independently from $X$; this quantity  is approximated by simulation. The $X$-independent penalty is more conservative than the $X$-dependent penalty. In particular the $X$-dependent penalty automatically adapts to highly correlated designs, using less aggressive penalization in this case \citet{BCH2011:InferenceGauss}.
 % 
-% \underline{In the case of heteroskedasticity}, the loadings are set to $\hat{\psi}_j=\sqrt{\mathbb{E}_n[x_{ij}^2 \hat \varepsilon_i^2]}$, where $\hat \varepsilon_i$ are preliminary estimates of the errors. The penalty level
+% \underline{In the case of heteroscedasticity}, the loadings are set to $\hat{\psi}_j=\sqrt{\mathbb{E}_n[x_{ij}^2 \hat \varepsilon_i^2]}$, where $\hat \varepsilon_i$ are preliminary estimates of the errors. The penalty level
 % can be $X$-independent \citep{BCCH12}:
 % \[ \lambda = 2c \sqrt{n} \Phi^{-1} (1-\gamma/(2p)), \]
 % or it can be X-dependent and estimated by a multiplier bootstrap procedure \citep{CCK:AOS13}:
@@ -282,7 +283,7 @@ where $g_i$'s are iid $N(0,1)$, conditional on the data. The $(1-\alpha)$-quanti
 
 \subsection*{R implementation}  The function \texttt{rlasso} implements Lasso and post-Lasso, where the prefix ``r" signifies that these are theoretically rigorous versions of Lasso and post-Lasso. The default option is post-Lasso, \code{post=TRUE}.  This function returns an object of S3 class \code{rlasso} for which methods like \code{predict}, \code{print}, \code{summary} are provided.
 
- \code{lassoShooting.fit} is the computational algorithm that underlies the estimation procedure, which implements a version of the Shooting Lasso Algorithm \citep{Fu1998}. The user has several options for choosing the non-default options. Specifically, the user can decide if an unpenalized \code{intercept} should be included (\code{TRUE} by default). The option \code{penalty} of the function \code{rlasso} allows different choices for the penalization parameter and loadings. It allows for homoskedastic or heteroskedastic errors with default \code{homoscedastic = FALSE}. Moreover, the dependence structure of the design matrix might be taken into consideration for calculation of the penalization parameter with \code{X.dependent.lambda = TRUE}. In combination with these options, the option \code{lambda.start} allows the user to set a starting value for $\lambda$ for the different algorithms. Moreover, the user can provide her own fixed value for the penalty level -- instead of the data-driven methods discussed above --  by setting \code{homoscedastic = "none"} and  supplying the value via \code{lambda.start}.
+ \code{lassoShooting.fit} is the computational algorithm that underlies the estimation procedure, which implements a version of the Shooting Lasso Algorithm \citep{Fu1998}. The user has several options for choosing the non-default options. Specifically, the user can decide if an unpenalized \code{intercept} should be included (\code{TRUE} by default). The option \code{penalty} of the function \code{rlasso} allows different choices for the penalization parameter and loadings. It allows for homoskedastic or heteroscedastic errors with default \code{homoscedastic = FALSE}. Moreover, the dependence structure of the design matrix might be taken into consideration for calculation of the penalization parameter with \code{X.dependent.lambda = TRUE}. In combination with these options, the option \code{lambda.start} allows the user to set a starting value for $\lambda$ for the different algorithms. Moreover, the user can provide her own fixed value for the penalty level -- instead of the data-driven methods discussed above --  by setting \code{homoscedastic = "none"} and  supplying the value via \code{lambda.start}.
  
 
 The constants $c$ and $\gamma$ from above can be set in the option \code{penalty}.
@@ -631,10 +632,10 @@ In this section we present methods to estimate the effect $\alpha_0$ in a settin
 To get efficient estimators and uniformly valid confidence intervals for the structural parameters there are different strategies which are asymptotically equivalent where again orthogonalization (via partialling out) is a key concept.
 
 In the case of the high-dimensional instrument $z_i$
-and low-dimensional $x_i$. We predict the endogenous variable $d_i$ using (Post-)Lasso regression of $d_i$ on the instruments $z_i$ and $x_i$, forcing the inclusion of $x_i$. Then we compute the IV estimator (2SLS) $\hat \alpha$ of the parameter $\alpha_0$ using the predicted value $\hat d_i$ as instrument and using $x_i$'s as controls.   We then perform inference on $\alpha_0$ using $\hat \alpha$ and conventional heteroskedasticity robust standard errors.
+and low-dimensional $x_i$. We predict the endogenous variable $d_i$ using (Post-)Lasso regression of $d_i$ on the instruments $z_i$ and $x_i$, forcing the inclusion of $x_i$. Then we compute the IV estimator (2SLS) $\hat \alpha$ of the parameter $\alpha_0$ using the predicted value $\hat d_i$ as instrument and using $x_i$'s as controls.   We then perform inference on $\alpha_0$ using $\hat \alpha$ and conventional heteroscedasticity robust standard errors.
 
 In the case of the low-dimensional instrument $z_i$
-and high-dimensional $x_i$, we first partial out the effect of $x_i$ from $d_i$, $y_i$, and $z_i$ by (Post-)Lasso. Second, we then use the residuals to compute the IV estimator (2SLS) $\hat \alpha$ of the parameter $\alpha_0$. We then perform inference on $\alpha_0$ using $\hat \alpha$ and conventional heteroskedasticity robust standard errors.
+and high-dimensional $x_i$, we first partial out the effect of $x_i$ from $d_i$, $y_i$, and $z_i$ by (Post-)Lasso. Second, we then use the residuals to compute the IV estimator (2SLS) $\hat \alpha$ of the parameter $\alpha_0$. We then perform inference on $\alpha_0$ using $\hat \alpha$ and conventional heteroscedasticity robust standard errors.
 
 In the case of the high-dimensional instrument $z_i$
 and high-dimensional $x_i$ the algorithm described in \citet{CHS:ManyIVNote} is adopted. 
@@ -642,7 +643,7 @@ and high-dimensional $x_i$ the algorithm described in \citet{CHS:ManyIVNote} is 
 %we 
 % (1) do lLsso or Post-Lasso regression of $d_i$ on $x_i, z_i$ to obtain $\hat \gamma$ and $\hat \delta$; (2) do lasso or Post-Lasso regression of $y_i$ on $x_i$ to get $\hat \theta$; (3) do Lasso or Post-Lasso regression of $\hat d_i = x_i'\hat\gamma + z_i'\hat\delta$ on $x_i$ to get
 %	 $\hat \vartheta$; (4) let $\hat{\rho}^y_i := y_i - x_i'\hat \theta$, $\hat{\rho}^d_i := d_i - x_i'\hat \vartheta$, and 
-%	$\hat{v}_i := x_i'\hat \gamma + z_i'\hat \delta - x_i'\hat \vartheta$. We then get estimator $\hat \alpha$ by using standard IV regression of $\hat{\rho}^y_i$ on $\hat{\rho}^d_i$ with $\hat{v}_i$ as the instrument.  Perform inference on $\alpha$ using $\hat \alpha$ and conventional heteroskedasticity robust standard errors. \\
+%	$\hat{v}_i := x_i'\hat \gamma + z_i'\hat \delta - x_i'\hat \vartheta$. We then get estimator $\hat \alpha$ by using standard IV regression of $\hat{\rho}^y_i$ on $\hat{\rho}^d_i$ with $\hat{v}_i$ as the instrument.  Perform inference on $\alpha$ using $\hat \alpha$ and conventional heteroscedasticity robust standard errors. \\
 
 
 
@@ -851,8 +852,10 @@ X = pension[,c("i2", "i3", "i4", "i5", "i6", "i7", "a2", "a3", "a4", "a5",
 xvar = c("i2", "i3", "i4", "i5", "i6", "i7", "a2", "a3", "a4", "a5",
     "fsize", "hs", "smcol", "col", "marr", "twoearn", "db", "pira", "hown")
 xpart = paste(xvar, collapse = "+")
-form = as.formula(paste("tw ~ ", paste(c("p401", xvar), collapse ="+"), "|",   paste(xvar, collapse = "+")))
-formZ = as.formula(paste("tw ~ ", paste(c("p401", xvar), collapse ="+"), "|",   paste(c("e401", xvar), collapse = "+")))
+form <- as.formula(paste("tw ~ ", paste(c("p401", xvar), collapse ="+"), "|",
+paste(xvar, collapse = "+")))
+formZ <- as.formula(paste("tw ~ ", paste(c("p401", xvar), collapse ="+"), "|",
+paste(c("e401", xvar), collapse = "+")))
 @
 
 Now we can  compute the estimates of the target treatment effect parameters.  For ATE and ATET we report the the effect of eligibility for 401(k).
@@ -868,11 +871,11 @@ summary(pension.atet)
 For LATE and LATET we estimate the effect of 401(k) participation (d) with plan eligibility (z) as instrument.
 
 <<401_analysis_LATE>>=
-pension.late = rlassoLATE(X,d,y,z)
-#pension.late = rlassoLATE(formZ, data=pension)
+pension.late = rlassoLATE(X,d,y,z, always_takers = FALSE)
+#pension.late = rlassoLATE(formZ, data=pension, always_takers = FALSE)
 summary(pension.late)
-pension.latet = rlassoLATET(X,d,y,z)
-#pension.latet = rlassoLATET(formZ, data=pension)
+pension.latet = rlassoLATET(X,d,y,z, always_takers = FALSE)
+#pension.latet = rlassoLATET(formZ, data=pension, always_takers = FALSE)
 summary(pension.latet)
 @
 
@@ -898,36 +901,45 @@ tab
 Finally, we estimate a model including all interaction effects:
 
 <<401_processing_interaction>>=
-#X = model.matrix(~ -1 + (i2 + i3 + i4 + i5 + i6 + i7 + a2 + a3 + a4 + a5 +
-#                  fsize + hs + smcol + col + marr + twoearn + db + pira + hown)^2, data = pension) # model with interactions
-xvar2 <- paste("(", xvar, ")^2", sep="")
-formExt = as.formula(paste("tw ~ ", paste(c("p401", xvar2), collapse ="+"), "|",   paste(xvar2, collapse = "+")))
-formZExt = as.formula(paste("tw ~ ", paste(c("p401", xvar2), collapse ="+"), "|",   paste(c("e401", xvar2), collapse = "+")))
+
+# generate all interactions of X's
+xvar2 = paste("(", paste(xvar, collapse = "+"), ")^2", sep="")
+
+# ATE and ATE with interactions
+forminteract = formula(paste("tw ~", xvar2, " + p401", 
+                                     "|", 
+                                     xvar2, sep=""))
+# LATE and LATET  with interactions
+formZinteract = formula(paste("tw ~", xvar2, " + p401", 
+                                     "|", 
+                                     xvar2, " + e401", sep=""))
 @
 
 <<401_analysis_interaction, results="hide", echo="FALSE">>=
-pension.ate =  rlassoATE(X,z,y)
-pension.atet =  rlassoATET(X,z,y)
-pension.late = rlassoLATE(X,d,y,z)
-pension.latet = rlassoLATET(X,d,y,z)
-#pension.ate =  rlassoATE(formExt, data = pension)
-#pension.atet =  rlassoATET(formExt, data = pension)
-#pension.late = rlassoLATE(formZExt, data = pension)
-#pension.latet = rlassoLATET(formZExt, data = pension)
-table= matrix(0, 4, 2)
-table[1,]= summary(pension.ate)[,1:2]
-table[2,]= summary(pension.atet)[,1:2]
-table[3,]= summary(pension.late)[,1:2]
-table[4,]= summary(pension.latet)[,1:2]
-colnames(table)= c("Estimate", "Std. Error")
-rownames(table)= c("ATE",  "ATET ", "LATE", "LATET")
-tab= xtable(table, digits=c(2, 2,2))
+# pension.ate= rlassoATE(forminteract, data = pension)
+# summary(pension.ate)
+# 
+# pension.atet= rlassoATET(forminteract, data = pension)
+# summary(pension.atet)
+# 
+# pension.late= rlassoLATE(formZinteract, data = pension, always_takers = FALSE)
+# summary(pension.late)
+# 
+# pension.latet= rlassoLATET(formZinteract, data = pension, always_takers = FALSE)
+# summary(pension.latet)
+# 
+# table= matrix(0, 4, 2)
+# table[1,]= summary(pension.ate)[,1:2]
+# table[2,]= summary(pension.atet)[,1:2]
+# table[3,]= summary(pension.late)[,1:2]
+# table[4,]= summary(pension.latet)[,1:2]
+# colnames(table)= c("Estimate", "Std. Error")
+# rownames(table)= c("ATE",  "ATET ", "LATE", "LATET")
+# tab= xtable(table, digits=c(2, 2,2))
 @
-
-This gives the following results:
-
+%This gives the following results:
 <<results="asis",echo=FALSE>>=
-tab
+# tab
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -966,6 +978,51 @@ confint(rlassoEffects(X,Y, index=c(1:p1)), joint=TRUE)
 @
 As you can see the procedure correctly tells that only
 the first cause $D_{i1}$, among the large number of causes, $D_{i1},..., D_{i20}$,  is a statistically significant cause of $Y$ (see the confidence interval for variable V1).
+
+\section{Methods for Valid Simultaneous Inference in High-Dimensional Models}
+
+The \texttt{hdm} packages provides methods for multiple testing adjustment as described in \cite{siminf2018}. Various methods to conduct valid simultaneous inference on a set of target coefficients are implemented in the S3 method \texttt{p\_adjust()}. For example, consider the problem of simultaneously testing 80 target coefficients in a simulated data example. For instance, it is possible to take the correlation structure among covariates into account by using the stepdown procedure of \cite{romanowolf2005}.
+<<siminf>>=
+library(mvtnorm) 
+set.seed(1)
+n = 100
+p = 80
+s = 9
+covar=toeplitz(0.9^(0:(p-1)))
+diag(covar) = rep(1,p)
+mu = rep(0,p)
+X = mvtnorm::rmvnorm(n=n, mean=mu, sigma=covar)  # Regressors
+beta = c(s:1, rep(0, p-s))
+Y = X%*% beta + rnorm(n, sd = 5)  #Outcome
+# Estimate rlassoEffects
+rl = rlassoEffects(X,Y, index=c(1:p))
+
+# unadjusted
+p.unadj = p_adjust(rl, method = "none")
+# Number of rejections at a prespecified significance level
+sum(p.unadj[,2]<0.05)
+@
+ 
+<<siminf2>>=
+# Romano-Wolf Stepdown Correction
+p.rw = p_adjust(rl, method = "RW", B = 1000)
+# Number of rejections at a prespecified significance level (5%)
+sum(p.rw[,2]<0.05)
+@
+
+More methods to adjust for multiple testing as provided by the \texttt{p.adjust()} command from the R base package are available, for instance the Bonferroni adjustment or FDR-controling methods like the Benjamini-Hochberg correction. 
+<<siminf3>>=
+# Adjust with Bonferroni correction
+p.bonf = p_adjust(rl, method = "bonferroni")
+# Number of rejections at a prespecified significance level
+sum(p.bonf[,2]<0.05)
+
+# Romano-Wolf Stepdown Correction
+p.bh = p_adjust(rl, method = "BH")
+# Number of rejections at a prespecified significance level
+sum(p.bh[,2]<0.05)
+@
+
 
 
 %\section{Some Tipps and Tricks}
@@ -1050,7 +1107,7 @@ data(BLP)
 It contains information on the price (in logartihm), the market share, and car characteristics like miles per gallon, miles per dollar, horse power per weight, space and air conditioning.
 
 \subsection{CPS data}
-The CPS is a monthly U.S. household survey conducted jointly by the U.S. Census Bureau and the Bureau of Labor Statistics. The data were collected for the year 2012. The sample comprises white non-hipanic, ages 25-54, working full time full year (35+ hours per week at least 50 weeks), exclude living in group quarters, self-employed, military, agricultural, and private household sector, allocated earning, inconsistent report on earnings and employment, missing data.
+The CPS is a monthly U.S. household survey conducted jointly by the U.S. Census Bureau and the Bureau of Labor Statistics. The data were collected for the year 2012. The sample comprises white non-Hispanic, ages 25-54, working full time full year (35+ hours per week at least 50 weeks), exclude living in group quarters, self-employed, military, agricultural, and private household sector, allocated earning, inconsistent report on earnings and employment, missing data.
 It can be inspected with the command
 <<results="hide">>=
 data(cps2012)

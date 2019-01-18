@@ -40,7 +40,7 @@ rlassologitEffects <- function(x, ...)
 #' beta <- c(rep(2,px), rep(0,p-px))
 #' intercept <- 1
 #' P <- exp(intercept + X %*% beta)/(1+exp(intercept + X %*% beta))
-#' y <- rbinom(length(y), size=1, prob=P)
+#' y <- rbinom(n, size=1, prob=P)
 #' xd <- X[,2:50]
 #' d <- X[,1]
 #' logit.effect <- rlassologitEffect(x=xd, d=d, y=y)
@@ -169,7 +169,7 @@ rlassologitEffect <- function(x, y, d, I3 = NULL, post = TRUE) {
   t <- predict(l1, type = "link", newdata = dx)
   sigma2 <- exp(t)/(1 + exp(t))^2
   w <- sigma2  #exp(t)/(1+exp(t))^2
-  f <- sqrt(sigma2) #1 #w/sigma2
+  f <- sqrt(sigma2) #w/sigma2=1
   I1 <- l1$index[-1]
   # Step 2
   la2 <- rep(2.2 * sqrt(n) * qnorm(1 - 0.05/(max(n, p * log(n)))), p)
@@ -336,14 +336,15 @@ confint.rlassologitEffects <- function(object, parm, level = 0.95, joint = FALSE
       }
     }
     var <- diag(Omegahat)
+    names(var) <- names(cf)
     Beta <- matrix(NA, ncol=B, nrow=k)
     sim <- vector("numeric", length = B)
     for (i in 1:B) {
       beta_i <- MASS::mvrnorm(mu = rep(0,k), Sigma=Omegahat/n)
       sim[i] <- max(abs(sqrt(n)*beta_i/var))
     }
-     a <- (1 - level)/2
-     ab <- c(a, 1 - a)
+     a <- (1 - level)  #not dividing by 2!
+     ab <- c(a/2, 1 - a/2)
      pct <- format.perc(ab, 3)
      ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
                                                                 pct))
@@ -351,8 +352,8 @@ confint.rlassologitEffects <- function(object, parm, level = 0.95, joint = FALSE
     # ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sigma
     # ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sigma
     hatc <- quantile(sim, probs = 1 - a)
-    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sqrt(var)
-    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sqrt(var)
+    ci[, 1] <- cf[parm] - hatc * 1/sqrt(n) * sqrt(var[parm])
+    ci[, 2] <- cf[parm] + hatc * 1/sqrt(n) * sqrt(var[parm])
   }
   return(ci)
 }

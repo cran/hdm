@@ -127,19 +127,31 @@ rlasso.formula <- function(formula, data = NULL, post = TRUE, intercept = TRUE, 
 #' @rdname rlasso
 #' @export
 rlasso.character <- function(x, data = NULL, post = TRUE, intercept = TRUE, model = TRUE, 
-                           penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
-                           control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...) {
+                             penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
+                             control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...) {
   formula <- as.formula(x)
-  res <- rlasso.formula(formula, data = data, post = post, intercept = intercept, model = model, 
-                        penalty = penalty, control = control, ...)
+  if (missing(penalty))
+    rlasso.formula(formula, data = data, post = post, intercept = intercept, model = model, 
+                   control = control, ...)
+  else
+    rlasso.formula(x, x, data = NULL, post = TRUE, intercept = TRUE, model = TRUE, 
+                   penalty = penalty,
+                   control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)
 }
+# rlasso.character <- function(x, data = NULL, post = TRUE, intercept = TRUE, model = TRUE, 
+#                            penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
+#                            control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...) {
+#   formula <- as.formula(x)
+#   res <- rlasso.formula(formula, data = data, post = post, intercept = intercept, model = model, 
+#                         penalty = penalty, control = control, ...)
+# }
 
 
 #' @rdname rlasso
 #' @export
 #' @param y dependent variable (vector, matrix or object can be coerced to matrix)
 #' @param x regressors (vector, matrix or object can be coerced to matrix)
-rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE,
+rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE, 
                            penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n)),
                            control = list(numIter = 15, tol = 10^-5, threshold = NULL),...) {
   x <- as.matrix(x)
@@ -171,6 +183,11 @@ rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE,
     penalty$c = 0.5
   }
   
+  default_pen <-  list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = .1/log(n))
+  if (post==FALSE &  isTRUE(all.equal(penalty, default_pen))) {  
+    penalty$c = 0.5
+  }
+  
   # Intercept handling and scaling
   if (intercept) {
     meanx <- colMeans(x)
@@ -183,6 +200,7 @@ rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE,
   }
   
   normx <- sqrt(apply(x, 2, var))
+  Psi <- apply(x, 2, function(x) mean(x^2)) 
   ind <- rep(FALSE, p) #
   
   # variables with low variation are taken out, because normalization is not reliable
@@ -275,13 +293,15 @@ rlasso.default <- function(x, y, post = TRUE, intercept = TRUE, model = TRUE,
     
     # homoscedatic and X-independent
     if (penalty$homoscedastic == TRUE && penalty$X.dependent.lambda == FALSE) {
-      Ups1 <- s1*normx
-      lambda <- rep(pen$lambda0 * s1, p)
+      Ups1 <- c(s1)*Psi
+      #lambda <- rep(pen$lambda0 * s1, p)
+      lambda <- pen$lambda0*Ups1
     }
     # homoscedatic and X-dependent
     if (penalty$homoscedastic == TRUE && penalty$X.dependent.lambda == TRUE) {
-      Ups1 <- s1*normx
-      lambda <- rep(pen$lambda0 * s1, p)
+      Ups1 <- c(s1)*Psi
+      #lambda <- rep(pen$lambda0 * s1, p)
+      lambda <- pen$lambda0 * Ups1
     }
     # heteroscedastic and X-independent
     if (penalty$homoscedastic == FALSE && penalty$X.dependent.lambda == FALSE) {
@@ -419,10 +439,21 @@ lambdaCalculation <- function(penalty = list(homoscedastic = FALSE, X.dependent.
     n <- dim(x)[1]
     R <- penalty$numSim
     sim <- vector("numeric", length = R)
-    for (l in 1:R) {
-      g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
-      sim[l] <- n * max(2 * colMeans(x * g))
-    }
+    # for (l in 1:R) {
+    #   g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
+    #   #sim[l] <- n * max(2 * colMeans(x * g))
+    #   psi <- apply(x, 2, function(x) mean(x^2))
+    #   sim[l] <- n * max(2 * abs(colMeans(t(t(x)/sqrt(psi)) * g)))
+    # }
+    
+    psi <- apply(x, 2, function(x) mean(x^2))
+    tXtpsi <- t(t(x)/sqrt(psi))
+    
+      for (l in 1:R) {
+        g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
+        sim[l] <- n * max(2 * abs(colMeans(tXtpsi * g)))
+      }
+   
     lambda0 <- penalty$c * quantile(sim, probs = 1 - penalty$gamma)
     Ups0 <- sqrt(var(y))
     lambda <- rep(lambda0 * Ups0, p)
@@ -448,13 +479,28 @@ lambdaCalculation <- function(penalty = list(homoscedastic = FALSE, X.dependent.
     n <- dim(x)[1]
     R <- penalty$numSim
     sim <- vector("numeric", length = R)
-    lasso.x.y <- rlasso(y ~ x)
-    eh <- lasso.x.y$residuals
+    #lasso.x.y <- rlasso(y ~ x)
+    #eh <- lasso.x.y$residuals
+    eh <- y
     ehat <- matrix(rep(eh, each = p), ncol = p, byrow = TRUE) # might be improved by initial estimator or passed through
-    for (l in 1:R) {
-      g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
-      sim[l] <- n * max(2 * colMeans(x * ehat* g)) # sqrt(n) or n??
-    }
+    # for (l in 1:R) {
+    #   g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
+    #   #sim[l] <- n * max(2 * colMeans(x * ehat* g))
+    #   xehat <- x*ehat
+    #   psi <- apply(xehat, 2, function(x) mean(x^2))
+    #   sim[l] <- n * max(2 * abs(colMeans(t(t(xehat)/sqrt(psi)) * g)))
+    # }
+    xehat <- x*ehat
+    psi <- apply(xehat, 2, function(x) mean(x^2))
+    tXehattpsi <- t(t(xehat)/sqrt(psi))
+    
+      for (l in 1:R) {
+        g <- matrix(rep(rnorm(n), each = p), ncol = p, byrow = TRUE)
+        #sim[l] <- n * max(2 * colMeans(x * ehat* g))
+        sim[l] <- n * max(2 * abs(colMeans(tXehattpsi * g)))
+      }
+    
+    
     lambda0 <- penalty$c * quantile(sim, probs = 1 - penalty$gamma)
     Ups0 <- 1/sqrt(n) * sqrt(t(t(y^2) %*% (x^2)))
     lambda <- lambda0 * Ups0

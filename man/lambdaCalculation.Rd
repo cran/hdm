@@ -28,4 +28,3 @@ denotes either the variance (\code{independent} case) or the data-dependent load
 \description{
 This function implements different methods for calculation of the penalization parameter \eqn{\lambda}. Further details can be found under \link{rlasso}.
 }
-

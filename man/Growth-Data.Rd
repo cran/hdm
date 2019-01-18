@@ -2,11 +2,11 @@
 % Please edit documentation in R/pkg-package.R
 \docType{data}
 \name{Growth Data}
-\alias{Example}
-\alias{GDP}
-\alias{Growth}
 \alias{Growth Data}
+\alias{Growth}
+\alias{Example}
 \alias{GrowthData}
+\alias{GDP}
 \title{Growth data set}
 \format{Dataframe with the following variables:
 \describe{
@@ -41,4 +41,3 @@ R.J. Barro, X. Sala-i-Martin (1995). Economic Growth. McGrwa-Hill, New York.
 \keyword{GDP}
 \keyword{Grwoth}
 \keyword{datasets}
-

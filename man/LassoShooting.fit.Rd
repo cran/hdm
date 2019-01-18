@@ -46,4 +46,3 @@ penalization. The arguments \code{XX} and \code{Xy} are optional and allow to us
 Fu, W. (1998). Penalized regressions: the bridge vs the lasso.
 \emph{Journal of Computational and Graphical Software} 7, 397-416.
 }
-

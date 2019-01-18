@@ -21,7 +21,7 @@
 #' @return An object of class \code{rlassoIVselectZ} containing at least the following
 #' components: \item{coefficients}{estimated parameter vector}
 #' \item{vcov}{variance-covariance matrix} \item{residuals}{
-#' residuals} \item{samplesize}{sample size}
+#' residuals} \item{samplesize}{sample size} \item{selected}{matrix of selected variables in the first stage for each endogenous variable}
 #' @references D. Belloni, D. Chen, V. Chernozhukov and C. Hansen (2012).
 #' Sparse models and methods for optimal instruments with an application to
 #' eminent domain. \emph{Econometrica} 80 (6), 2369--2429.
@@ -47,6 +47,7 @@ rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, .
   
   Z <- cbind(z,x) # including the x-variables as instruments
   kiv <- dim(Z)[2]
+  select.mat <- NULL # matrix with the selected variables
   
   # first stage regression
   Dhat <- NULL
@@ -60,13 +61,15 @@ rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, .
       flag.const <- flag.const + 1
       if (flag.const >1) message("No variables selected for two or more instruments leading to multicollinearity problems.")
       #intercept <- FALSE # to avoid multicollineariry
+      select.mat <- cbind(select.mat, FALSE)
     } else {
       # dihat <- z%*%lasso.fit$coefficients
       dihat <- predict(lasso.fit)
+      select.mat <- cbind(select.mat, lasso.fit$index)
     }
     Dhat <- cbind(Dhat, dihat)
   }
-  
+  colnames(select.mat) <- colnames(d)
   #if (intercept) { #?
   #  Dhat <- cbind(Dhat, 1, x) 
   #  d <- cbind(d, 1, x)
@@ -83,14 +86,28 @@ rlassoIVselectZ.default <- function(x, d, y, z, post = TRUE, intercept = TRUE, .
   alpha.hat <- MASS::ginv(t(Dhat)%*%d)%*%(t(Dhat)%*%y)
   # calcualtion of the variance-covariance matrix
   residuals <- y - d %*% alpha.hat
-  Omega.hat <- t(Dhat) %*% diag(as.vector(residuals^2)) %*% Dhat  #  Dhat.e <- Dhat*as.vector(residuals);  Omega.hat <- t(Dhat.e)%*%Dhat.e
+  #Omega.hat <- t(Dhat) %*% diag(as.vector(residuals^2)) %*% Dhat  #  Dhat.e <- Dhat*as.vector(residuals);  Omega.hat <- t(Dhat.e)%*%Dhat.e
+  Omega.hat <- t(Dhat) %*% (Dhat*as.vector(residuals^2))
   Q.hat.inv <- MASS::ginv(t(d) %*% Dhat)  #solve(t(d)%*%Dhat)
   vcov <- Q.hat.inv %*% Omega.hat %*% t(Q.hat.inv)
   rownames(alpha.hat) <- c(colnames(d))
   colnames(vcov) <- rownames(vcov) <- rownames(alpha.hat)
+  
+  if (is.null(x)){
   res <- list(coefficients = alpha.hat[1:ke, ], se = sqrt(diag(vcov))[1:ke], 
-              vcov = vcov[1:ke, 1:ke, drop = FALSE], residuals = residuals, samplesize = n, 
-              call = match.call())
+              vcov = vcov[1:ke, 1:ke, drop = FALSE], residuals = residuals, samplesize = n, selected = select.mat, 
+              call = match.call()) 
+  }
+  else{
+    if (is.null(x) == FALSE){
+      res <- list(coefficients = alpha.hat[1:ke, ], se = sqrt(diag(vcov))[1:ke], 
+                  vcov = vcov[1:ke, 1:ke, drop = FALSE], 
+                  coefficients.controls = alpha.hat[(ke + 1):(ke + kex), ], se.controls = sqrt(diag(vcov))[(ke + 1):(ke + kex)], 
+                  vcov.controls = vcov[(ke + 1):(ke + kex), (ke + 1):(ke + kex), drop = FALSE],
+                  residuals = residuals, samplesize = n, selected = select.mat, 
+                  call = match.call())
+    }
+  }
   class(res) <- "rlassoIVselectZ"
   return(res)
 }
@@ -150,11 +167,11 @@ print.rlassoIVselectZ <- function(x, digits = max(3L, getOption("digits") -
 summary.rlassoIVselectZ <- function(object, digits = max(3L, getOption("digits") - 
                                                            3L), ...) {
   if (length(coef(object))) {
-    k <- length(object$coefficient)
+    k <- length(object$coefficients)
     table <- matrix(NA, ncol = 4, nrow = k)
-    rownames(table) <- names(object$coefficient)
+    rownames(table) <- names(object$coefficients)
     colnames(table) <- c("coeff.", "se.", "t-value", "p-value")
-    table[, 1] <- object$coefficient
+    table[, 1] <- object$coefficients
     table[, 2] <- sqrt(diag(as.matrix(object$vcov)))
     table[, 3] <- table[, 1]/table[, 2]
     table[, 4] <- 2 * pnorm(-abs(table[, 3]))

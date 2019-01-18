@@ -2,8 +2,8 @@
 % Please edit documentation in R/pkg-package.R
 \docType{package}
 \name{hdm-package}
-\alias{hdm}
 \alias{hdm-package}
+\alias{hdm}
 \title{hdm: High-Dimensional Metrics}
 \description{
 This package implements methods for estimation and inference in a high-dimensional setting.
@@ -17,11 +17,6 @@ includes functions for fitting heteroskedastic robust Lasso regressions with non
 for instrumental variable (IV) and treatment effect estimation in a
 high-dimensional setting. Moreover, the methods enable valid post-selection
 inference. Moreover, a theoretically grounded, data-driven choice of the penalty level is provided.
-}
-\author{
-Victor Chernozhukov, Christian Hansen, Martin Spindler\cr
-
-Maintainer: Martin Spindler <spindler@mea.mpisoc.mpg.de>
 }
 \references{
 A. Belloni, D. Chen, V. Chernozhukov and C. Hansen (2012).
@@ -37,4 +32,8 @@ A. Belloni, V. Chernozhukov, C. Hansen (2014). Inference on
 treatment effects after selection among high-dimensional controls. The
 Review of Economic Studies 81(2), 608-650.
 }
+\author{
+Victor Chernozhukov, Christian Hansen, Martin Spindler\cr
 
+Maintainer: Martin Spindler <spindler@mea.mpisoc.mpg.de>
+}

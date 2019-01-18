@@ -15,6 +15,8 @@ rlassoIVselectX(x, ...)
 \arguments{
 \item{x}{exogenous variables in the structural equation (matrix)}
 
+\item{\dots}{arguments passed to the function \code{rlasso}}
+
 \item{d}{endogenous variables in the structural equation (vector or matrix)}
 
 \item{y}{outcome or dependent variable in the structural equation (vector or matrix)}
@@ -28,8 +30,6 @@ d endogenous variable, z instrumental variables, and x exogenous variables.}
 
 \item{data}{An optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. 
 If not found in data, the variables are taken from environment(formula), typically the environment from which \code{rlassoIVselectX} is called.}
-
-\item{\dots}{arguments passed to the function \code{rlasso}}
 }
 \value{
 An object of class \code{rlassoIVselectX} containing at least the following
@@ -67,4 +67,3 @@ Chernozhukov, V., Hansen, C. and M. Spindler (2015). Post-Selection and Post-Reg
 Models with Many Controls and Instruments
 \emph{American Economic Review, Papers and Proceedings} 105(5), 486--490.
 }
-

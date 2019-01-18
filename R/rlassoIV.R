@@ -58,12 +58,13 @@ rlassoIV.default <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post 
   n <- length(y)
   
   if (select.Z == FALSE && select.X == FALSE) {
-    res <- tsls(x, d, y, z, ...)
+    res <- tsls(x, d, y, z, homoscedastic = FALSE, ...)
     return(res)
   }
   
   if (select.Z == TRUE && select.X == FALSE) {
     res <- rlassoIVselectZ(x, d, y, z, post = post, ...)
+    
     return(res)
   }
   
@@ -83,8 +84,9 @@ rlassoIV.default <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post 
       return(list(alpha = NA, se = NA))
     }
     ind.dzx <- lasso.d.zx$index
-    PZ <- Z[, ind.dzx] %*% MASS::ginv(t(Z[, ind.dzx]) %*% Z[, ind.dzx]) %*% 
-      t(Z[, ind.dzx]) %*% d
+    #PZ <- Z[, ind.dzx] %*% MASS::ginv(t(Z[, ind.dzx]) %*% Z[, ind.dzx]) %*% 
+    #  t(Z[, ind.dzx]) %*% d
+    PZ <- as.matrix(predict(lasso.d.zx))
     lasso.PZ.x <- rlasso(x, PZ, post = post, ...)
     ind.PZx <- lasso.PZ.x$index
     
@@ -106,7 +108,7 @@ rlassoIV.default <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE, post 
       Zr <- lasso.PZ.x$residuals
     }
     
-    result <- tsls(y = Yr, d = Dr, x = NULL, z = Zr, intercept = FALSE)
+    result <- tsls(y = Yr, d = Dr, x = NULL, z = Zr, intercept = FALSE, homoscedastic = FALSE)
     coef <- as.vector(result$coefficient)
     se <- diag(sqrt(result$vcov))
     names(coef) <- names(se) <- colnames(d)
@@ -238,7 +240,7 @@ rlassoIVmult <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE,
     colnames(z) <- paste("z", 1:ncol(z), sep = "")
   
   if (select.Z == FALSE & select.X == FALSE) {
-    res <- tsls(x=x, d=d, y=y, z=z, ...)
+    res <- tsls(x=x, d=d, y=y, z=z, homoscedastic = FALSE, ...)
     return(res)
   }
   
@@ -286,7 +288,7 @@ rlassoIVmult <- function(x, d, y, z, select.Z = TRUE, select.X = TRUE,
       Drhat <- cbind(Drhat, Dr)
       Zrhat <- cbind(Zrhat, Zr)
     }
-    result <- tsls(y = Yr, d = Drhat, x = NULL, z = Zrhat)
+    result <- tsls(y = Yr, d = Drhat, x = NULL, z = Zrhat, homoscedastic = FALSE)
     coef <- as.vector(result$coefficient)
     se <- sqrt(diag(result$vcov))
     names(coef) <- names(se) <- colnames(d)

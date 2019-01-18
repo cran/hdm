@@ -2,9 +2,9 @@
 % Please edit documentation in R/rlasso.R
 \name{rlasso}
 \alias{rlasso}
+\alias{rlasso.formula}
 \alias{rlasso.character}
 \alias{rlasso.default}
-\alias{rlasso.formula}
 \title{rlasso: Function for Lasso estimation under homoscedastic and heteroscedastic non-Gaussian
 disturbances}
 \usage{
@@ -127,4 +127,3 @@ high-dimensional sparse econometric models. In Advances in Economics and
 Econometrics: 10th World Congress, Vol. 3: Econometrics, Cambirdge
 University Press: Cambridge, 245-295.
 }
-
