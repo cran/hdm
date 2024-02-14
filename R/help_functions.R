@@ -1,4 +1,4 @@
-format.perc <- function(probs, digits) paste(format(100 * probs, trim = TRUE, 
+format_perc <- function(probs, digits) paste(format(100 * probs, trim = TRUE, 
                                                     scientific = FALSE, digits = digits), "%")
 
 # function for calculation of the errors after choosing the five
@@ -243,7 +243,7 @@ if(!is.null(I)){
       }
     }
     # check: for logical I, it has to have the appropriate length:
-    if(class(I.orig) == "logical" & length(I.orig) != length(f1.no.y.string)){
+    if(is(I.orig, "logical") & length(I.orig) != length(f1.no.y.string)){
       stop(paste("If 'I' is logical, its length has to be the same as the number of 'elements' (",
                  length(f1.no.y.string),
                  ") in the 'x + d'-part of 'formula'.", sep=""))

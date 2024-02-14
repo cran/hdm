@@ -4,8 +4,13 @@
 \alias{coef.rlassoEffects}
 \title{Coefficients from S3 objects \code{rlassoEffects}}
 \usage{
-\method{coef}{rlassoEffects}(object, complete = TRUE,
-  selection.matrix = FALSE, include.targets = FALSE, ...)
+\method{coef}{rlassoEffects}(
+  object,
+  complete = TRUE,
+  selection.matrix = FALSE,
+  include.targets = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{rlassoEffects}, usually a result of a call \code{rlassoEffect} or \code{rlassoEffects}.}
@@ -24,5 +29,30 @@ the selection matrix will also indicate the selection of the target coefficients
 Method to extract coefficients from objects of class \code{rlassoEffects}
 }
 \details{
-Printing coefficients and selection matrix for S3 object \code{rlassoEffects}
+Printing coefficients and selection matrix for S3 object \code{rlassoEffects}. Interpretation of entries in the selection matrix
+\itemize{
+ \item \code{"-"} indicates a target variable,
+ \item \code{"x"} indicates that a variable has been selected with rlassoEffects (coefficient is different from zero),
+ \item \code{"."} indicates that a variable has been de-selected with rlassoEffects (coefficient is zero).
+}
+}
+\examples{
+library(hdm)
+set.seed(1)
+n = 100 #sample size
+p = 100 # number of variables
+s = 7 # number of non-zero variables
+X = matrix(rnorm(n*p), ncol=p)
+colnames(X) <- paste("X", 1:p, sep="")
+beta = c(rep(3,s), rep(0,p-s))
+y = 1 + X\%*\%beta + rnorm(n)
+data = data.frame(cbind(y,X))
+colnames(data)[1] <- "y"
+lasso.effect = rlassoEffects(X, y, index=c(1,2,3,50), 
+                             method = "double selection")
+coef(lasso.effect) # standard use of coef() - without selection matrix
+# with selection matrix
+coef(lasso.effect, selection.matrix = TRUE)
+# prettier output with print_coef (identical options as coef())
+print_coef(lasso.effect, selection.matrix = TRUE) 
 }

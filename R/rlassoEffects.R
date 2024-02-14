@@ -37,7 +37,7 @@
 #' set.seed(1)
 #' n = 100 #sample size
 #' p = 100 # number of variables
-#' s = 3 # nubmer of non-zero variables
+#' s = 3 # number of non-zero variables
 #' X = matrix(rnorm(n*p), ncol=p)
 #' colnames(X) <- paste("X", 1:p, sep="")
 #' beta = c(rep(3,s), rep(0,p-s))
@@ -128,7 +128,7 @@ rlassoEffects.default <- function(x, y, index = c(1:ncol(x)), method = "partiall
     I3m <- I3[-index[i]]
     lasso.regs[[i]] <- try(col <- rlassoEffect(Xt, y, d, method = method, 
                                                I3 = I3m, post = post, ...), silent = TRUE)
-    if (class(lasso.regs[[i]]) == "try-error") {
+    if (is(lasso.regs[[i]], "try-error")) {
       next
     } else {
       coefficients[i] <- col$alpha
@@ -176,10 +176,10 @@ rlassoEffects.formula <- function(formula, data, I, method = "partialling out",
   try(if (is.matrix(eval(parse(text=cn)))) cn <- colnames(eval(parse(text=cn))), silent=TRUE)
   I.c <- check_variables(I, cn)
   #I.c <- grep(cn[I.c],colnames(X))
-  I.c <- which(colnames(X) %in% cn[I.c])
+  I.c <- which(colnames(x) %in% cn[I.c])
   I3 <- check_variables(included, cn)
   #I3 <- grep(cn[I.c],colnames(X))
-  I3 <- which(colnames(X) %in% cn[I.c])
+  I3 <- which(colnames(x) %in% cn[I.c])
   #if (length(intersect(I.c, I3) != 0)) 
   #  stop("I and included should not contain the same variables!")
   
@@ -330,7 +330,7 @@ print.rlassoEffects <- function(x, digits = max(3L, getOption("digits") -
 #     a <- c(a, 1 - a)
 #     # fac <- qt(a, n-k)
 #     fac <- qnorm(a)
-#     pct <- format.perc(a, 3)
+#     pct <- format_perc(a, 3)
 #     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
 #                                                                pct))
 #     ses <- object$se[parm]
@@ -351,7 +351,7 @@ print.rlassoEffects <- function(x, digits = max(3L, getOption("digits") -
 #     }
 #     a <- (1 - level)/2
 #     ab <- c(a, 1 - a)
-#     pct <- format.perc(ab, 3)
+#     pct <- format_perc(ab, 3)
 #     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
 #                                                                pct))
 #     hatc <- quantile(sim, probs = 1 - a)
@@ -377,7 +377,7 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
     a <- c(a, 1 - a)
     # fac <- qt(a, n-k)
     fac <- qnorm(a)
-    pct <- format.perc(a, 3)
+    pct <- format_perc(a, 3)
     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
                                                                pct))
     ses <- object$se[parm]
@@ -404,7 +404,7 @@ confint.rlassoEffects <- function(object, parm, level = 0.95, joint = FALSE,
     }
     a <- (1 - level) #not dividing by 2!
     ab <- c(a/2, 1 - a/2)
-    pct <- format.perc(ab, 3)
+    pct <- format_perc(ab, 3)
     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm,
                                                                pct))
     hatc <- quantile(sim, probs = 1 - a)
@@ -527,7 +527,12 @@ print.summary.rlassoEffects <- function(x, digits = max(3L, getOption("digits") 
 #'
 #' Method to extract coefficients from objects of class \code{rlassoEffects}
 #' 
-#' Printing coefficients and selection matrix for S3 object \code{rlassoEffects}
+#' Printing coefficients and selection matrix for S3 object \code{rlassoEffects}. Interpretation of entries in the selection matrix
+#' \itemize{
+#'  \item \code{"-"} indicates a target variable,
+#'  \item \code{"x"} indicates that a variable has been selected with rlassoEffects (coefficient is different from zero),
+#'  \item \code{"."} indicates that a variable has been de-selected with rlassoEffects (coefficient is zero).
+#' }
 #' 
 #' @param object an object of class \code{rlassoEffects}, usually a result of a call \code{rlassoEffect} or \code{rlassoEffects}.
 #' @param selection.matrix if TRUE, a selection matrix is returned that indicates the selected variables from each auxiliary regression. 
@@ -536,8 +541,27 @@ print.summary.rlassoEffects <- function(x, digits = max(3L, getOption("digits") 
 #' the selection matrix will also indicate the selection of the target coefficients that are specified in the  \code{rlassoEffects} call. 
 #' @param complete general option of the function \code{coef}.
 #' @param ... further arguments passed to functions coef or print. 
-#' @rdname coef.rlassoEffects
 #' @export
+#' @rdname coef.rlassoEffects
+#' @examples
+#' library(hdm)
+#' set.seed(1)
+#' n = 100 #sample size
+#' p = 100 # number of variables
+#' s = 7 # number of non-zero variables
+#' X = matrix(rnorm(n*p), ncol=p)
+#' colnames(X) <- paste("X", 1:p, sep="")
+#' beta = c(rep(3,s), rep(0,p-s))
+#' y = 1 + X%*%beta + rnorm(n)
+#' data = data.frame(cbind(y,X))
+#' colnames(data)[1] <- "y"
+#' lasso.effect = rlassoEffects(X, y, index=c(1,2,3,50), 
+#'                              method = "double selection")
+#' coef(lasso.effect) # standard use of coef() - without selection matrix
+#' # with selection matrix
+#' coef(lasso.effect, selection.matrix = TRUE)
+#' # prettier output with print_coef (identical options as coef())
+#' print_coef(lasso.effect, selection.matrix = TRUE) 
 coef.rlassoEffects <- function(object, complete = TRUE, selection.matrix = FALSE, include.targets = FALSE, ...) {
   
   cf <- object$coefficients
@@ -619,6 +643,24 @@ coef.rlassoEffects <- function(object, complete = TRUE, selection.matrix = FALSE
 #' @rdname print_coef
 #' @aliases print_coef.rlassoEffects
 #' @export
+#' @examples
+#' library(hdm)
+#' set.seed(1)
+#' n = 100 #sample size
+#' p = 100 # number of variables
+#' s = 7 # number of non-zero variables
+#' X = matrix(rnorm(n*p), ncol=p)
+#' colnames(X) <- paste("X", 1:p, sep="")
+#' beta = c(rep(3,s), rep(0,p-s))
+#' y = 1 + X%*%beta + rnorm(n)
+#' data = data.frame(cbind(y,X))
+#' colnames(data)[1] <- "y"
+#' lasso.effect = rlassoEffects(X, y, index=c(1,2,3,50), 
+#'                              method = "double selection")
+#' # without target coefficient estimates
+#' print_coef(lasso.effect, selection.matrix = TRUE) 
+#' # with target coefficient estimates
+#' print_coef(lasso.effect, selection.matrix = TRUE, targets = TRUE) 
 print_coef <-  function(x, ...){
   UseMethod("print_coef")
 }
@@ -648,6 +690,6 @@ print_coef.rlassoEffects <- function(x, complete = TRUE, selection.matrix = FALS
     cat("_ _ _ \n")
     print("'-' indicates a target variable; ")
     print("'x' indicates that a variable has been selected with rlassoEffects (coefficient is different from zero);") 
-    print("'o' indicates that a variable has been de-selected with rlassoEffects (coefficient is zero).")
+    print("'.' indicates that a variable has been de-selected with rlassoEffects (coefficient is zero).")
   }
 }

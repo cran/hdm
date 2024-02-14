@@ -1,9 +1,13 @@
 Package: hdm
 Type: Package
 Title: High-Dimensional Metrics
-Version: 0.3.1
-Date: 2018-12-19
-Authors@R: c(person("Martin", "Spindler", email="martin.spindler@gmx.de", role=c("cre", "aut")), person("Victor", "Chernozhukov", role="aut"), person("Christian", "Hansen", role="aut"),  person("Philipp", "Bach", email = "philipp.bach@uni-hamburg.de", role="ctb"))
+Version: 0.3.2
+Date: 2024-02-09
+Authors@R: c(
+  person("Martin", "Spindler", email="martin.spindler@gmx.de", role=c("cre", "aut")),
+  person("Victor", "Chernozhukov", role="aut"),
+  person("Christian", "Hansen", role="aut"),
+  person("Philipp", "Bach", email = "philipp.bach@uni-hamburg.de", role="ctb"))
 Depends: R (>= 3.0.0)
 Description: Implementation of selected high-dimensional statistical and
     econometric methods for estimation and inference. Efficient estimators and
@@ -18,18 +22,17 @@ Description: Implementation of selected high-dimensional statistical and
 License: MIT + file LICENSE
 LazyData: TRUE
 Imports: MASS, glmnet, ggplot2, checkmate, Formula, methods
-Suggests: testthat, knitr, xtable, mvtnorm
+Suggests: testthat, knitr, rmarkdown, formatR, xtable, mvtnorm,
+        markdown
 VignetteBuilder: knitr
-RoxygenNote: 6.1.0
+Encoding: UTF-8
+RoxygenNote: 7.3.1
+NeedsCompilation: no
+Packaged: 2024-02-14 15:17:25 UTC; bachp
 Author: Martin Spindler [cre, aut],
   Victor Chernozhukov [aut],
   Christian Hansen [aut],
   Philipp Bach [ctb]
 Maintainer: Martin Spindler <martin.spindler@gmx.de>
 Repository: CRAN
-Repository/R-Forge/Project: hdm
-Repository/R-Forge/Revision: 160
-Repository/R-Forge/DateTimeStamp: 2019-01-18 15:08:29
-Date/Publication: 2019-01-18 21:50:17 UTC
-NeedsCompilation: no
-Packaged: 2019-01-18 15:34:25 UTC; rforge
+Date/Publication: 2024-02-14 21:20:02 UTC

@@ -4,7 +4,8 @@
 \name{AJR}
 \alias{AJR}
 \title{AJR data set}
-\format{\describe{ 
+\format{
+\describe{ 
 \item{Mort}{Settler mortality}
 \item{logMort}{logarithm of Mort}
 \item{Latitude}{Latitude}
@@ -16,12 +17,13 @@
 \item{Neo}{Neo-Europes}
 \item{GDP}{GDP}
 \item{Exprop}{Average protection against expropriation risk} 
-}}
+}
+}
 \description{
 Dataset on settler mortality.
 }
 \details{
-Data set was analysed in Acemoglu et al. (2001). A detailed description of the data can be found at \url{http://economics.mit.edu/faculty/acemoglu/data/ajr2001}
+Data set was analysed in Acemoglu et al. (2001). A detailed description of the data can be found at \url{https://economics.mit.edu/people/faculty/daron-acemoglu/data-archive}
 }
 \examples{
 data(AJR)

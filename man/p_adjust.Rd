@@ -4,8 +4,6 @@
 \alias{p_adjust}
 \alias{p_adjust.rlassoEffects}
 \alias{p_adjust.lm}
-\alias{p_adjust.rlassoEffects}
-\alias{p_adjust.lm}
 \title{Multiple Testing Adjustment of p-values for S3 objects \code{rlassoEffects}
 and \code{lm}}
 \usage{
@@ -52,11 +50,11 @@ Objects of class \code{rlassoEffects} are constructed by
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{rlassoEffects}: \code{\link{rlassoEffects}}.
+\item \code{p_adjust(rlassoEffects)}: \code{\link{rlassoEffects}}.
 
-\item \code{lm}: \code{\link[stats]{lm}}.
+\item \code{p_adjust(lm)}: \code{\link[stats]{lm}}.
+
 }}
-
 \examples{
 library(hdm);
 set.seed(1)

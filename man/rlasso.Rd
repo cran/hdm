@@ -10,20 +10,41 @@ disturbances}
 \usage{
 rlasso(x, ...)
 
-\method{rlasso}{formula}(formula, data = NULL, post = TRUE,
-  intercept = TRUE, model = TRUE, penalty = list(homoscedastic = FALSE,
-  X.dependent.lambda = FALSE, lambda.start = NULL, c = 1.1, gamma = 0.1/log(n)),
-  control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)
+\method{rlasso}{formula}(
+  formula,
+  data = NULL,
+  post = TRUE,
+  intercept = TRUE,
+  model = TRUE,
+  penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL,
+    c = 1.1, gamma = 0.1/log(n)),
+  control = list(numIter = 15, tol = 10^-5, threshold = NULL),
+  ...
+)
 
-\method{rlasso}{character}(x, data = NULL, post = TRUE, intercept = TRUE,
-  model = TRUE, penalty = list(homoscedastic = FALSE, X.dependent.lambda =
-  FALSE, lambda.start = NULL, c = 1.1, gamma = 0.1/log(n)),
-  control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)
+\method{rlasso}{character}(
+  x,
+  data = NULL,
+  post = TRUE,
+  intercept = TRUE,
+  model = TRUE,
+  penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL,
+    c = 1.1, gamma = 0.1/log(n)),
+  control = list(numIter = 15, tol = 10^-5, threshold = NULL),
+  ...
+)
 
-\method{rlasso}{default}(x, y, post = TRUE, intercept = TRUE,
-  model = TRUE, penalty = list(homoscedastic = FALSE, X.dependent.lambda =
-  FALSE, lambda.start = NULL, c = 1.1, gamma = 0.1/log(n)),
-  control = list(numIter = 15, tol = 10^-5, threshold = NULL), ...)
+\method{rlasso}{default}(
+  x,
+  y,
+  post = TRUE,
+  intercept = TRUE,
+  model = TRUE,
+  penalty = list(homoscedastic = FALSE, X.dependent.lambda = FALSE, lambda.start = NULL,
+    c = 1.1, gamma = 0.1/log(n)),
+  control = list(numIter = 15, tol = 10^-5, threshold = NULL),
+  ...
+)
 }
 \arguments{
 \item{x}{regressors (vector, matrix or object can be coerced to matrix)}
@@ -48,11 +69,11 @@ penalized.}
 
 \item{penalty}{list with options for the calculation of the penalty. 
 \itemize{
-\item{\code{c} and \code{gamma}}{ constants for the penalty with default \code{c=1.1} and \code{gamma=0.1}}
-\item{\code{homoscedastic}}{ logical, if homoscedastic errors are considered (default \code{FALSE}). Option \code{none} is described below.}
-\item{\code{X.dependent.lambda}}{ logical,  \code{TRUE}, if the penalization parameter depends on the the design of the matrix \code{x}. \code{FALSE}, if independent of the design matrix  (default).}
-\item{\code{numSim}}{ number of simulations for the dependent methods, default=5000}
-\item{\code{lambda.start}}{ initial penalization value, compulsory for method "none"}
+\item \code{c} and \code{gamma} constants for the penalty with default \code{c=1.1} and \code{gamma=0.1}
+\item \code{homoscedastic} logical, if homoscedastic errors are considered (default \code{FALSE}). Option \code{none} is described below.
+\item \code{X.dependent.lambda} logical,  \code{TRUE}, if the penalization parameter depends on the the design of the matrix \code{x}. \code{FALSE}, if independent of the design matrix  (default).
+\item \code{numSim}  number of simulations for the dependent methods, default=5000
+\item \code{lambda.start} initial penalization value, compulsory for method "none"
 }}
 
 \item{control}{list with control values.
@@ -67,17 +88,24 @@ coefficients. Absolute values below the threshold are set to zero.}
 \value{
 \code{rlasso} returns an object of class \code{rlasso}. An object of
 class "rlasso" is a list containing at least the following components:
-\item{coefficients}{parameter estimates}
-\item{beta}{parameter estimates (named vector of coefficients without intercept)}
-\item{intercept}{value of the intercept}
-\item{index}{index of selected
-variables (logical vector)} \item{lambda}{data-driven penalty term for each
-variable, product of lambda0 (the penalization parameter) and the loadings}
-\item{lambda0}{penalty term} \item{loadings}{loading for each regressor}
-\item{residuals}{residuals, response minus fitted values} \item{sigma}{root of the variance of
-the residuals} \item{iter}{number of iterations} \item{call}{function call}
-\item{options}{options}
-\item{model}{model matrix (if \code{model = TRUE} in function call)}
+\itemize{
+\item coefficients parameter estimates
+\item beta parameter estimates (named vector of coefficients without intercept)
+\item intercept value of the intercept
+\item index index of selected
+variables (logical vector)
+\item lambda data-driven penalty term for each
+variable, product of lambda0 (the penalization parameter) and the loadings
+\item lambda0 penalty term
+\item loadings loading for each regressor
+\item residuals residuals, response minus fitted values
+\item sigma root of the variance of
+the residuals
+ \item iter number of iterations
+ \item call function call
+\item options options
+\item model model matrix (if \code{model = TRUE} in function call)
+}
 }
 \description{
 The function estimates the coefficients of a Lasso regression with
@@ -97,7 +125,7 @@ in particular the regressor-independent loadings, we refer to Appendix A in
 Belloni et al. (2012). When the option "none" is chosen for \code{homoscedastic} (together with
 \code{lambda.start}), lambda is set to \code{lambda.start} and the
 regressor-independent loadings und heteroscedasticity are used. The options "X-dependent" and
-"X-independent" under homoscedasticity are described in Belloni et al. (2013).
+"X-independent" under homoscedasticity are described in Belloni et al. (2013). 
 
 The option \code{post=TRUE} conducts post-lasso estimation, i.e. a refit of
 the model with the selected variables.

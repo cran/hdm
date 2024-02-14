@@ -13,7 +13,7 @@
 #'
 #' @name hdm-package
 #' @aliases hdm-package hdm
-#' @docType package
+"_PACKAGE"
 #' @author Victor Chernozhukov, Christian Hansen, Martin Spindler\cr
 #'
 #' Maintainer: Martin Spindler <spindler@@mea.mpisoc.mpg.de>
@@ -67,8 +67,8 @@ NULL
 #' The number of complete observations is 90.
 #'
 #' @source The full data set and further details can be found at
-#' \url{http://www.nber.org/pub/barro.lee}, \url{http://www.barrolee.com}, and,
-#' \url{http://www.bristol.ac.uk//Depts//Economics//Growth//barlee.htm}.
+#' \url{https://www2.nber.org/pub/barro.lee/} and,
+#' \url{https://www.bristol.ac.uk//Depts//Economics//Growth//barlee.htm}.
 #'
 #' @name Growth Data
 #' @aliases Growth Example GrowthData GDP
@@ -141,7 +141,7 @@ NULL
 #'
 #' Dataset on settler mortality.
 #'
-#' Data set was analysed in Acemoglu et al. (2001). A detailed description of the data can be found at \url{http://economics.mit.edu/faculty/acemoglu/data/ajr2001} 
+#' Data set was analysed in Acemoglu et al. (2001). A detailed description of the data can be found at \url{https://economics.mit.edu/people/faculty/daron-acemoglu/data-archive} 
 #'
 #' @name AJR
 #' @docType data

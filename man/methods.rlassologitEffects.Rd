@@ -5,18 +5,13 @@
 \alias{methods.rlassologitEffects}
 \alias{summary.rlassologitEffects}
 \alias{confint.rlassologitEffects}
-\alias{summary.rlassologitEffects}
-\alias{confint.rlassologitEffects}
 \title{Methods for S3 object \code{rlassologitEffects}}
 \usage{
-\method{print}{rlassologitEffects}(x, digits = max(3L, getOption("digits") -
-  3L), ...)
+\method{print}{rlassologitEffects}(x, digits = max(3L, getOption("digits") - 3L), ...)
 
-\method{summary}{rlassologitEffects}(object, digits = max(3L,
-  getOption("digits") - 3L), ...)
+\method{summary}{rlassologitEffects}(object, digits = max(3L, getOption("digits") - 3L), ...)
 
-\method{confint}{rlassologitEffects}(object, parm, level = 0.95,
-  joint = FALSE, ...)
+\method{confint}{rlassologitEffects}(object, parm, level = 0.95, joint = FALSE, ...)
 }
 \arguments{
 \item{x}{an object of class \code{rlassologitEffects}}

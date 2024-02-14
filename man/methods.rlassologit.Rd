@@ -6,21 +6,15 @@
 \alias{print.rlassologit}
 \alias{summary.rlassologit}
 \alias{model.matrix.rlassologit}
-\alias{model.matrix.rlassologit}
-\alias{print.rlassologit}
-\alias{summary.rlassologit}
 \title{Methods for S3 object \code{rlassologit}}
 \usage{
-\method{predict}{rlassologit}(object, newdata = NULL, type = "response",
-  ...)
+\method{predict}{rlassologit}(object, newdata = NULL, type = "response", ...)
 
 \method{model.matrix}{rlassologit}(object, ...)
 
-\method{print}{rlassologit}(x, all = TRUE, digits = max(3L,
-  getOption("digits") - 3L), ...)
+\method{print}{rlassologit}(x, all = TRUE, digits = max(3L, getOption("digits") - 3L), ...)
 
-\method{summary}{rlassologit}(object, all = TRUE, digits = max(3L,
-  getOption("digits") - 3L), ...)
+\method{summary}{rlassologit}(object, all = TRUE, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{object}{an object of class \code{rlassologit}}

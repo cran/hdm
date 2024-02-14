@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Victor Chernozhukov, Christian Hansen, Martin Spindler" />
+
+
+<title>High-Dimensional Metrics in R</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">High-Dimensional Metrics in R</h1>
+<h4 class="author">Victor Chernozhukov, Christian Hansen, Martin
+Spindler</h4>
+
+
+
+<p><strong>Abstract.</strong> The package High-dimensional Metrics
+(<code>hdm</code>) is an evolving collection of statistical methods for
+estimation and quantification of uncertainty in high-dimensional
+approximately sparse models. It focuses on providing confidence
+intervals and significance testing for (possibly many) low-dimensional
+subcomponents of the high-dimensional parameter vector. Efficient
+estimators and uniformly valid confidence intervals for regression
+coefficients on target variables (e.g., treatment or policy variable) in
+a high-dimensional approximately sparse regression model, for average
+treatment effect (ATE) and average treatment effect for the treated
+(ATET), as well for extensions of these parameters to the endogenous
+setting are provided. Theory grounded, data-driven methods for selecting
+the penalization parameter in Lasso regressions under heteroscedastic
+and non-Gaussian errors are implemented. Moreover, joint/ simultaneous
+confidence intervals for regression coefficients of a high-dimensional
+sparse regression are implemented, including a joint significance test
+for Lasso regression. Data sets which have been used in the literature
+and might be useful for classroom demonstration and for testing new
+estimators are included. <code>R</code> and the package <code>hdm</code>
+are open-source software projects and can be freely downloaded from
+CRAN: <a href="https://cran.r-project.org" class="uri">https://cran.r-project.org</a>.</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Analysis of high-dimensional models, models in which the number of
+parameters to be estimated is large relative to the sample size, is
+becoming increasingly important. Such models arise naturally in modern
+data sets which have many measured characteristics available per
+individual observation as in, for example, population census data,
+scanner data, and text data. Such models also arise naturally even in
+data with a small number of measured characteristics in situations where
+the exact functional form with which the observed variables enter the
+model is unknown and we create many technical variables, a dictionary,
+from the raw characteristics. Examples covered by this scenario include
+semiparametric models with nonparametric nuisance functions. More
+generally, models with many parameters relative to the sample size often
+arise when attempting to model complex phenomena.</p>
+<p>With increasing availability of such data sets in economics and other
+data science fields, new methods for analyzing those data have been
+developed. The <code>R</code> package <code>hdm</code> contains
+implementations of recently developed methods for high-dimensional
+approximately sparse models, mainly relying on forms of lasso and
+post-lasso as well as related estimation and inference methods. The
+methods are illustrated with econometric applications, but are also
+useful in other disciplines such as medicine, biology, sociology or
+psychology.</p>
+<p>The methods which are implemented in this package are distinct from
+already available methods in other packages in the following four major
+ways:</p>
+<ul>
+<li><p>[<strong>1)</strong>] First, we provide a version of Lasso
+regression that expressly handles and allows for non-Gaussian and
+heteroscedastic errors.</p></li>
+<li><p>[<strong>2)</strong>] Second, we implement a theoretically
+grounded, data-driven choice of the penalty level <span class="math inline">\(\lambda\)</span> in the Lasso regressions. To
+underscore this choice, we call the Lasso implementation in this package
+rigorous “Lasso” (=<code>lasso</code>). The prefix <strong>r</strong> in
+function names should underscore this. In high-dimensional settings
+cross-validation is very popular; but it lacks a theoretical
+justification for use in the present context and some theoretical
+proposals for the choice of <span class="math inline">\(\lambda\)</span>
+are often not feasible.</p></li>
+<li><p>[<strong>3)</strong>] Third, we provide efficient estimators and
+uniformly valid confidence intervals for various low-dimensional
+causal/structural parameters appearing in high-dimensional approximately
+sparse models. For example, we provide efficient estimators and
+uniformly valid confidence intervals for a regression coefficient on a
+target variable (e.g., a treatment or policy variable) in a
+high-dimensional sparse regression model. Target variable in this
+context means the object not interest, e.g. a prespecified regression
+coefficient. We also provide estimates and confidence intervals for
+average treatment effect (ATE) and average treatment effect for the
+treated (ATET), as well extensions of these parameters to the endogenous
+setting.</p></li>
+<li><p>[<strong>4)</strong>] Fourth, joint/ simultaneous confidence
+intervals for estimated coefficients in a high-dimensional approximately
+sparse models are provided, based on the methods and theory developed in
+<span class="citation">A. Belloni, Chernozhukov, and Kato (2014)</span>.
+They proposed uniformly valid confidence regions for regressions
+coefficients in a high-dimensional sparse Z-estimation problems, which
+include median, mean, and many other regression problems as special
+cases. In this article we apply this method to the coefficients of a
+Lasso regression and highlight this method with an empirical
+example.</p></li>
+</ul>
+</div>
+<div id="how-to-get-started" class="section level2">
+<h2>How to get started</h2>
+<p><code>R</code> is an open source software project and can be freely
+downloaded from the CRAN website along with its associated
+documentation. The <code>R</code> package <code>hdm</code> can be
+downloaded from <a href="https://cran.r-project.org/" class="uri">https://cran.r-project.org/</a>. To install the
+<code>hdm</code> package from <code>R</code> we simply type,</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;hdm&quot;</span>)</span></code></pre></div>
+<p> The most current version of the package (development version) is
+maintained at the GitHub repository (<a href="https://github.com/MartinSpindler/hdm" class="uri">https://github.com/MartinSpindler/hdm</a>) and can be
+installed by the command (previous installation of the
+<code>remotes</code> package is required)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;MartinSpindler/hdm&quot;</span>)</span></code></pre></div>
+<p> Provided that your machine has a proper internet connection and you
+have write permission in the appropriate system directories, the
+installation of the package should proceed automatically. Once the
+<code>hdm</code> package is installed, it can be loaded to the current
+<code>R</code> session by the command,</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(hdm)</span></code></pre></div>
+<p>Online help is available in two ways. For example, you can type:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package =</span> <span class="st">&quot;hdm&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">help</span>(rlasso)</span></code></pre></div>
+<p>The former command gives an overview over the available commands in
+the package, and the latter gives detailed information about a specific
+command.</p>
+<p>More generally one can initiate a web-browser help session with the
+command,</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">help.start</span>()</span></code></pre></div>
+<p>and navigate as desired. The browser approach is better adapted to
+exploratory inquiries, while the command line approach is better suited
+to confirmatory ones.</p>
+<p>A valuable feature of <code>R</code> help files is that the examples
+used to illustrate commands are executable, so they can be pasted into
+an <code>R</code> session or run as a group with a command like,</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">example</span>(rlasso)</span></code></pre></div>
+</div>
+<div id="prediction-using-approximate-sparsity" class="section level2">
+<h2>Prediction using Approximate Sparsity</h2>
+<div id="prediction-in-linear-models-using-approximate-sparsity" class="section level3">
+<h3>Prediction in Linear Models using Approximate Sparsity</h3>
+<p>Consider high dimensional approximately sparse linear regression
+models. These models have a large number of regressors <span class="math inline">\(p\)</span>, possibly much larger than the sample
+size <span class="math inline">\(n\)</span>, but only a relatively small
+number <span class="math inline">\(s =o(n)\)</span> of these regressors
+are important for capturing accurately the main features of the
+regression function. The latter assumption makes it possible to estimate
+these models effectively by searching for approximately the right set of
+regressors.</p>
+<p>The model reads <span class="math display">\[ y_i = x_i&#39;
+\beta_0  + \varepsilon_i, \quad \mathbb{E}[\varepsilon_i x_i]=0, \quad
+\beta_0 \in \mathbb{R}^p,
+\quad i=1,\ldots,n \]</span> where <span class="math inline">\(y_i\)</span> are observations of the response
+variable, <span class="math inline">\(x_i=(x_{i,j}, \ldots,
+x_{i,p})\)</span>’s are observations of <span class="math inline">\(p-\)</span>dimensional regressors, and <span class="math inline">\(\varepsilon_i\)</span>’s are centered
+disturbances, where possibly <span class="math inline">\(p \gg
+n\)</span>. Assume that the data sequence is i.i.d. for the sake of
+exposition, although the framework covered is considerably more general.
+An important point is that the errors <span class="math inline">\(\varepsilon_i\)</span> may be non-Gaussian or
+heteroscedastic <span class="citation">(Alexandre Belloni et al.
+2012)</span>.</p>
+<p>The model can be exactly sparse, namely <span class="math display">\[
+\| \beta_0\|_0 \leq s = o(n),
+\]</span> or approximately sparse, namely that the values of
+coefficients, sorted in decreasing order, <span class="math inline">\((|
+\beta_0|_{(j)})_{j=1}^p\)</span> obey, <span class="math display">\[
+| \beta_0|_{(j)} \leq \mathsf{A} j^{-\mathsf{a}(\beta_0)},  \quad
+\mathsf{a}(\beta_0)&gt;1/2, \quad j=1,...,p.
+\]</span> An approximately sparse model can be well-approximated by an
+exactly sparse model with sparsity index <span class="math display">\[s
+\propto n^{1/(2 \mathsf{a}(\beta_0))}.\]</span></p>
+<p>In order to get theoretically justified performance guarantees, we
+consider the Lasso estimator with data-driven penalty loadings: <span class="math display">\[ \hat \beta = \arg \min_{\beta \in  \mathbb{R}^p}
+\mathbb{E}_n [(y_i - x_i&#39; \beta)^2] + \frac{\lambda}{n} ||\hat{\Psi}
+\beta||_1 \]</span> where <span class="math inline">\(||\beta||_1=\sum_{j=1}^p |\beta_j|\)</span>, <span class="math inline">\(\hat{\Psi}=\mathrm{diag}(\hat{\psi}_1,\ldots,\hat{\psi}_p)\)</span>
+is a diagonal matrix consisting of penalty loadings, and <span class="math inline">\(\mathbb{E}_n\)</span> abbreviates the empirical
+average. The penalty loadings are chosen to insure basic equivariance of
+coefficient estimates to rescaling of <span class="math inline">\(x_{i,j}\)</span> and can also be chosen to address
+heteroscedasticity in model errors. We discuss the choice of <span class="math inline">\(\lambda\)</span> and <span class="math inline">\(\hat \Psi\)</span> below.</p>
+<p>Regularization by the <span class="math inline">\(\ell_1\)</span>-norm naturally helps the Lasso
+estimator to avoid overfitting, but it also shrinks the fitted
+coefficients towards zero, causing a potentially significant bias. In
+order to remove some of this bias, consider the Post-Lasso estimator
+that applies ordinary least squares to the model <span class="math inline">\(\hat{T}\)</span> selected by Lasso, formally,
+<span class="math display">\[ \hat{T} = \text{support}(\hat{\beta}) = \{
+j \in \{ 1, \ldots,p\}: \lvert \hat{\beta} \rvert &gt;0 \}. \]</span>
+The Post-Lasso estimate is then defined as <span class="math display">\[\tilde{\beta} \in \arg\min_{\beta \in
+\mathbb{R}^p}  \ \mathbb{E}_n \left( y_i - \sum_{j=1}^p x_{i,j} \beta_j
+\right) ^2: \beta_j=0 \quad \text{ if } \hat \beta_j = 0 , \quad \forall
+j.\]</span> In words, the estimator is ordinary least squares applied to
+the data after removing the regressors that were not selected by Lasso.
+The Post-Lasso estimator was introduced and analysed in <span class="citation">(A. Belloni and Chernozhukov 2013)</span>.</p>
+<p>A crucial matter is the choice of the penalization parameter <span class="math inline">\(\lambda\)</span>. With the right choice of the
+penalty level, Lasso and Post-Lasso estimators possess excellent
+performance guarantees: They both achieve the near-oracle rate for
+estimating the regression function, namely with probability <span class="math inline">\(1- \gamma - o(1)\)</span>, <span class="math display">\[\sqrt{\mathbb{E}_n [ (x_{i}&#39;(\hat \beta -
+\beta_0))^2 ] } \lesssim \sqrt{(s/n) \log p}. \]</span></p>
+<p>In high-dimensions setting, cross-validation is very popular in
+practice but lacks theoretical justification and so may not provide such
+a performance guarantee. In sharp contrast, the choice of the
+penalization parameter <span class="math inline">\(\lambda\)</span> in
+the Lasso and Post-Lasso methods in this package is theoretical grounded
+and feasible. Therefore we call the resulting method the “rigorous”
+Lasso method and hence add a prefix <strong>r</strong> to the function
+names.</p>
+<p>In the case of <strong>homoscedasticity</strong>, we set the penalty
+loadings <span class="math inline">\(\hat{\psi}_j = \sqrt{\mathbb{E}_n
+x_{i,j}^2}\)</span>, which insures basic equivariance properties. There
+are two choices for penalty level <span class="math inline">\(\lambda\)</span>: the <span class="math inline">\(X\)</span>-independent choice and <span class="math inline">\(X\)</span>-dependent choice. In the <span class="math inline">\(X\)</span>-independent choice we set the penalty
+level to <span class="math display">\[ \lambda = 2c \sqrt{n}
+\hat{\sigma} \Phi^{-1}(1-\gamma/(2p)), \]</span> where <span class="math inline">\(\Phi\)</span> denotes the cumulative standard
+normal distribution, <span class="math inline">\(\hat \sigma\)</span> is
+a preliminary estimate of <span class="math inline">\(\sigma =
+\sqrt{\mathbb{E} \varepsilon^2}\)</span>, and <span class="math inline">\(c\)</span> is a theoretical constant, which is set
+to <span class="math inline">\(c=1.1\)</span> by default for the
+Post-Lasso method and <span class="math inline">\(c=.5\)</span> for the
+Lasso method, and <span class="math inline">\(\gamma\)</span> is the
+probability level, which is set to <span class="math inline">\(\gamma
+=.1\)</span> by default. The parameter <span class="math inline">\(\gamma\)</span> can be interpreted as the
+probability of mistakenly not removing <span class="math inline">\(X\)</span>’s when all of them have zero
+coefficients. In the X-dependent case the penalty level is calculated as
+<span class="math display">\[ \lambda = 2c \hat{\sigma}
+\Lambda(1-\gamma|X), \]</span> where <span class="math display">\[
+\Lambda(1-\gamma|X)=(1-\gamma)-\text{quantile of}\quad
+n||\mathbb{E}_n[x_i e_i] ||_{\infty}|X,\]</span> where <span class="math inline">\(X=[x_1, \ldots, x_n]&#39;\)</span> and <span class="math inline">\(e_i\)</span> are iid <span class="math inline">\(N(0,1)\)</span>, generated independently from
+<span class="math inline">\(X\)</span>; this quantity is approximated by
+simulation. The <span class="math inline">\(X\)</span>-independent
+penalty is more conservative than the <span class="math inline">\(X\)</span>-dependent penalty. In particular the
+<span class="math inline">\(X\)</span>-dependent penalty automatically
+adapts to highly correlated designs, using less aggressive penalization
+in this case <span class="citation">(Alexandre Belloni, Chernozhukov,
+and Hansen 2010)</span>.</p>
+<p>In the case of *heteroscedasticity**, the loadings are set to <span class="math inline">\(\hat{\psi}_j=\sqrt{\mathbb{E}_n[x_{ij}^2 \hat
+\varepsilon_i^2]}\)</span>, where <span class="math inline">\(\hat
+\varepsilon_i\)</span> are preliminary estimates of the errors. The
+penalty level can be <span class="math inline">\(X\)</span>-independent
+<span class="citation">(Alexandre Belloni et al. 2012)</span>: <span class="math display">\[ \lambda = 2c \sqrt{n} \Phi^{-1} (1-\gamma/(2p)),
+\]</span> or it can be X-dependent and estimated by a multiplier
+bootstrap procedure <span class="citation">(V. Chernozhukov,
+Chetverikov, and Kato 2013)</span>: <span class="math display">\[
+\lambda = c \times c_W(1-\gamma), \]</span> where <span class="math inline">\(c_W(1-\gamma)\)</span> is the <span class="math inline">\(1-\gamma\)</span>-quantile of the random variable
+<span class="math inline">\(W\)</span>, conditional on the data, where
+<span class="math display">\[ W:= n \max_{1 \leq j \leq p}
+|2\mathbb{E}_n [x_{ij} \hat{\varepsilon}_i e_i]|,\]</span> where <span class="math inline">\(e_i\)</span> are iid standard normal variables
+distributed independently from the data, and $ _i$ denotes an estimate
+of the residuals.</p>
+<p>Estimation proceeds by iteration. The estimates of residuals <span class="math inline">\(\hat \varepsilon_i\)</span> are initialized by
+running least squares of <span class="math inline">\(y_i\)</span> on
+five regressors that are most correlated to <span class="math inline">\(y_i\)</span>. This implies conservative starting
+values for <span class="math inline">\(\lambda\)</span> and the penalty
+loadings, and leads to the initial Lasso and Post-Lasso estimates, which
+are then further updated by iteration. The resulting iterative procedure
+is fully justified in the theoretical literature.</p>
+</div>
+<div id="a-joint-significance-test-for-lasso-regression" class="section level3">
+<h3>A Joint Significance Test for Lasso Regression</h3>
+<p>A basic question frequently arising in empirical work is whether the
+Lasso regression has explanatory power, comparable to a F-test for the
+classical linear regression model. The construction of a joint
+significance test follows <span class="citation">(V. Chernozhukov,
+Chetverikov, and Kato 2013)</span> (Appendix M), and can be described
+as:</p>
+<p>Based on the model <span class="math inline">\(y_i =a_0 + x_i&#39;
+b_0 + \varepsilon_i\)</span>, the null hypothesis of joint statistical
+in-significance is <span class="math inline">\(b_0 = 0\)</span>. The
+alternative is that of the joint statistical significance: <span class="math inline">\(b_0 \neq 0\)</span>. The null hypothesis implies
+that</p>
+<p><span class="math display">\[ \mathbb{E} \left[ (y_i - a_0) x_i
+\right] = 0,\]</span></p>
+<p>and restriction can be tested using the sup-score statistic:</p>
+<p><span class="math display">\[S = \| \sqrt{n} \mathbb{E}_n \left[ (y_i
+- \hat a_0) x_i \right] \|_\infty,
+\]</span></p>
+<p>where <span class="math inline">\(\hat a_i = \mathbb{E}_n
+[y_i]\)</span>. The critical value for this statistic can be
+approximated by the multiplier bootstrap procedure, which simulates the
+statistic:</p>
+<p><span class="math display">\[ S^* = \| \sqrt{n} \mathbb{E}_n \left[
+(y_i - \hat a_0) x_i g_i \right] \|_\infty,\]</span></p>
+<p>where <span class="math inline">\(g_i\)</span>’s are iid <span class="math inline">\(N(0,1)\)</span>, conditional on the data. The
+<span class="math inline">\((1-\alpha)\)</span>-quantile of <span class="math inline">\(S^*\)</span> serves as the critical value, <span class="math inline">\(c(1-\alpha)\)</span>. We reject the null if <span class="math inline">\(S &gt; c(1-\alpha)\)</span> in favor of
+statistical significant, and we keep the null of non-significance
+otherwise. This test procedure is implemented in the package when
+calling the <code>summary</code>-method of
+<code>rlasso</code>-objects.</p>
+</div>
+<div id="r-implementation" class="section level3">
+<h3>R implementation</h3>
+<p>The function <code>rlasso</code> implements Lasso and post-Lasso,
+where the prefix <strong>r</strong> signifies that these are
+theoretically rigorous versions of Lasso and post-Lasso. The default
+option is post-Lasso, <code>post=TRUE</code>. This function returns an
+object of S3 class <code>lasso</code> for which methods like
+<code>predict</code>, <code>print</code>, <code>summary</code> are
+provided.</p>
+<p><code>lassoShooting.fit</code> is the computational algorithm that
+underlies the estimation procedure, which implements a version of the
+Shooting Lasso Algorithm <span class="citation">(Fu 1998)</span>. The
+user has several options for choosing the non-default options.
+Specifically, the user can decide if an unpenalized
+<code>intercept</code> should be included (<code>TRUE</code> by
+default). The option <code>penalty</code> of the function
+<code>lasso</code> allows different choices for the penalization
+parameter and loadings. It allows for homoscedastic or heteroscedastic
+errors with default <code>homoscedastic = FALSE</code>. Moreover, the
+dependence structure of the design matrix might be taken into
+consideration for calculation of the penalization parameter with
+<code>X.dependent.lambda = TRUE</code>. In combination with these
+options, the option <code>lambda.start</code> allows the user to set a
+starting value for <span class="math inline">\(\lambda\)</span> for the
+different algorithms. Moreover, the user can provide her own fixed value
+for the penalty level – instead of the data-driven methods discussed
+above – by setting <code>homoscedastic = &quot;none&quot;</code> and supplying the
+value via <code>lambda.start</code>.</p>
+<p>The constants <span class="math inline">\(c\)</span> and <span class="math inline">\(\gamma\)</span> from above can be set in the
+option <code>penalty</code>. The quantities <span class="math inline">\(\hat{\varepsilon}\)</span>, <span class="math inline">\(\hat{\Psi}\)</span>, <span class="math inline">\(\hat{\sigma}\)</span> are calculated in a
+iterative manner. The maximum number of iterations and the tolerance
+when the algorithms should stop can be set with
+<code>control</code>.</p>
+<p>The method <code>summary</code> of <code>rlasso</code>-objects
+displays additionally for model diagnosis the <span class="math inline">\(R^2\)</span> value, the adjusted <span class="math inline">\(R^2\)</span> with degrees of freedom equal to the
+number of selected parameters, and the sup-score statistic for joint
+significance – described above – with corresponding p-value.</p>
+</div>
+<div id="example-prediction-using-lasso-and-post-lasso" class="section level3">
+<h3>Example (Prediction Using Lasso and Post-Lasso)</h3>
+<p>Consider generated data from a sparse linear model:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">100</span>  <span class="co">#sample size</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">100</span>  <span class="co"># number of variables</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>s <span class="ot">=</span> <span class="dv">3</span>  <span class="co"># nubmer of variables with non-zero coefficients</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), <span class="at">ncol =</span> p)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">5</span>, s), <span class="fu">rep</span>(<span class="dv">0</span>, p <span class="sc">-</span> s))</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div>
+<p>Next we estimate the model, print the results, and make in-sample and
+out-of sample predictions. We can use methods <code>print</code> and
+<code>summary</code> to print the results, where the option
+<code>all</code> can be set to <code>FALSE</code> to limit the print
+only to the non-zero coefficients.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>lasso.reg <span class="ot">=</span> <span class="fu">rlasso</span>(Y <span class="sc">~</span> X, <span class="at">post =</span> <span class="cn">FALSE</span>)  <span class="co"># use lasso, not-Post-lasso</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="co"># lasso.reg = rlasso(X, Y, post=FALSE)</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>sum.lasso <span class="ot">&lt;-</span> <span class="fu">summary</span>(lasso.reg, <span class="at">all =</span> <span class="cn">FALSE</span>)  <span class="co"># can also do print(lasso.reg, all=FALSE)</span></span></code></pre></div>
+<pre><code>## 
+## Call:
+## rlasso.formula(formula = Y ~ X, post = FALSE)
+## 
+## Post-Lasso Estimation:  FALSE 
+## 
+## Total number of variables: 100
+## Number of selected variables: 11 
+## 
+## Residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.09008 -0.45801 -0.01237  0.50291  2.25098 
+## 
+##             Estimate
+## (Intercept)    0.057
+## 1              4.771
+## 2              4.693
+## 3              4.766
+## 13            -0.045
+## 15            -0.047
+## 16            -0.005
+## 19            -0.092
+## 22            -0.027
+## 40            -0.011
+## 61             0.114
+## 100           -0.025
+## 
+## Residual standard error: 0.8039
+## Multiple R-squared:  0.9913
+## Adjusted R-squared:  0.9902
+## Joint significance test:
+##  the sup score statistic for joint significance test is 64.02 with a p-value of     0</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>yhat.lasso <span class="ot">=</span> <span class="fu">predict</span>(lasso.reg)  <span class="co">#in-sample prediction</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>Xnew <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), <span class="at">ncol =</span> p)  <span class="co"># new X</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>Ynew <span class="ot">=</span> Xnew <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)  <span class="co">#new Y</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>yhat.lasso.new <span class="ot">=</span> <span class="fu">predict</span>(lasso.reg, <span class="at">newdata =</span> Xnew)  <span class="co">#out-of-sample prediction</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>post.lasso.reg <span class="ot">=</span> <span class="fu">rlasso</span>(Y <span class="sc">~</span> X, <span class="at">post =</span> <span class="cn">TRUE</span>)  <span class="co">#now use post-lasso</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">print</span>(post.lasso.reg, <span class="at">all =</span> <span class="cn">FALSE</span>)  <span class="co"># or use  summary(post.lasso.reg, all=FALSE) </span></span></code></pre></div>
+<pre><code>## 
+## Call:
+## rlasso.formula(formula = Y ~ X, post = TRUE)
+## 
+## (Intercept)            1            2            3  
+##      0.0341       4.9241       4.8579       4.9644</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>yhat.postlasso <span class="ot">=</span> <span class="fu">predict</span>(post.lasso.reg)  <span class="co">#in-sample prediction</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>yhat.postlasso.new <span class="ot">=</span> <span class="fu">predict</span>(post.lasso.reg, <span class="at">newdata =</span> Xnew)  <span class="co">#out-of-sample prediction</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>MAE <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">cbind</span>(<span class="fu">abs</span>(Ynew <span class="sc">-</span> yhat.lasso.new), <span class="fu">abs</span>(Ynew <span class="sc">-</span> yhat.postlasso.new)), <span class="dv">2</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    mean)</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="fu">names</span>(MAE) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;lasso MAE&quot;</span>, <span class="st">&quot;Post-lasso MAE&quot;</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="fu">print</span>(MAE, <span class="at">digits =</span> <span class="dv">2</span>)  <span class="co"># MAE for Lasso and Post-Lasso</span></span></code></pre></div>
+<pre><code>##      lasso MAE Post-lasso MAE 
+##           0.91           0.79</code></pre>
+<p>In the example above the sup-score statistic for overall significance
+is 64.02 with a pvalue of 0. This means that the null hypothesis is
+rejected on level <span class="math inline">\(\alpha=0.05\)</span> and
+the model seems to have explanatory power.</p>
+</div>
+</div>
+<div id="inference-on-target-regression-coefficients" class="section level2">
+<h2>Inference on Target Regression Coefficients</h2>
+<p>Here we consider inference on the target coefficient <span class="math inline">\(\alpha\)</span> in the model: <span class="math display">\[
+y_i = d_i \alpha_0 + x_i&#39;\beta_0 + \epsilon_i,   \quad \mathbb{E}
+\epsilon_i (x_i&#39;, d_i&#39;)&#39; =0.
+\]</span> Here <span class="math inline">\(d_i\)</span> is a target
+regressor such as treatment, policy or other variable whose regression
+coefficient <span class="math inline">\(\alpha_0\)</span> we would like
+to learn <span class="citation">(Alexandre Belloni, Chernozhukov, and
+Hansen 2014)</span>. If we are interested in coefficients of several or
+even many variables, we can simply write the model in the above form
+treating each variable of interest as <span class="math inline">\(d_i\)</span> in turn and then applying the
+estimation and inference procedures described below.</p>
+<p>We assume approximate sparsity for <span class="math inline">\(x_i&#39;\beta_0\)</span> with sufficient speed of
+decay of the sorted components of <span class="math inline">\(\beta_0\)</span>, namely <span class="math inline">\(\mathsf{a}(\beta_0) &gt;1\)</span>. This condition
+translates into having a sparsity index <span class="math inline">\(s
+\ll \sqrt{n}\)</span>. In general <span class="math inline">\(d_i\)</span> is correlated to <span class="math inline">\(x_i\)</span>, so <span class="math inline">\(\alpha_0\)</span> cannot be consistently estimated
+by the regression of <span class="math inline">\(y_i\)</span> on <span class="math inline">\(d_i\)</span>. To keep track of the relationship of
+<span class="math inline">\(d_i\)</span> to <span class="math inline">\(x_i\)</span>, write <span class="math display">\[
+d_i = x_i&#39;\pi^d_0 + `R`ho^d_i,  \quad \mathbb{E} `R`ho^d_i x_i = 0.
+\]</span> To estimate <span class="math inline">\(\alpha_0\)</span>, we
+also impose approximate sparsity on the regression function <span class="math inline">\(x_i&#39;\pi^d_0\)</span> with sufficient speed of
+decay of sorted components of <span class="math inline">\(\pi^d_0\)</span>, namely <span class="math inline">\(\mathsf{a}(\pi^d_0) &gt; 1\)</span>.</p>
+<p><strong>The Orthogonality Principle.</strong> Note that we can not
+use naive estimates of <span class="math inline">\(\alpha_0\)</span>
+based simply on applying Lasso and Post-Lasso to the first equation.
+Such a strategy in general does not produce root-<span class="math inline">\(n\)</span> consistent and asymptotically normal
+estimators of <span class="math inline">\(\alpha\)</span>, due to the
+possibility of large omitted variable bias resulting from estimating the
+nuisance function <span class="math inline">\(x_i&#39;\beta_0\)</span>
+in high-dimensional setting. In order to overcome the omitted variable
+bias, we need to use orthogonalized estimating equations for <span class="math inline">\(\alpha_0\)</span>. Specifically we seek to find a
+score <span class="math inline">\(\psi(w_i, \alpha, \eta)\)</span>,
+where <span class="math inline">\(w_i = (y_i,x_i&#39;)&#39;\)</span> and
+<span class="math inline">\(\eta\)</span> is the nuisance parameter,
+such that <span class="math display">\[
+\mathbb{E} \psi(w_i, \alpha_0, \eta_0) = 0, \quad
+\frac{\partial}{\partial \eta} \mathbb{E} \psi(w_i, \alpha_0, \eta_0) =
+0.
+\]</span> The second equation is the orthogonality condition, which
+states that the equations are not sensitive to the first-order
+perturbations of the nuisance parameter <span class="math inline">\(\eta\)</span> near the true value. The latter
+property allows estimation of these nuisance parameters <span class="math inline">\(\eta_0\)</span> by regularized estimators <span class="math inline">\(\hat \eta\)</span>, where regularization is done
+via penalization or selection. Without this property, regularization may
+have too much effect on the estimator of <span class="math inline">\(\alpha_0\)</span> for regular inference to
+proceed.</p>
+<p>The estimators <span class="math inline">\(\hat \alpha\)</span> of
+<span class="math inline">\(\alpha_0\)</span> solve the empirical analog
+of the equation above, <span class="math display">\[
+\mathbb{E}_n \psi(w_i, \hat \alpha, \hat \eta) = 0,
+\]</span> where we have plugged in the estimator <span class="math inline">\(\hat \eta\)</span> for the nuisance parameter. Due
+to the orthogonality property the estimator is first-order equivalent to
+the infeasible estimator <span class="math inline">\(\tilde
+\alpha\)</span> solving <span class="math display">\[
+\mathbb{E}_n \psi(w_i, \tilde \alpha, \eta_0) = 0,
+\]</span> where we use the true value of the nuisance parameter. The
+equivalence holds in a variety of models under plausible conditions. The
+systematic development of the orthogonality condition for inference on
+low-dimensional parameters in modern high-dimensional settings is given
+in <span class="citation">Victor Chernozhukov, Hansen, and Spindler
+(2015b)</span>.</p>
+<p>In turns out that in the linear model the orthogonal equations are
+closely connected to the classical ideas of partialling out.</p>
+<div id="intuition-for-the-orthogonality-principle-in-linear-models-via-partialling-out-one-way-to-think-about-estimation-of-alpha_0-is-to-think-of-the-regression-model" class="section level3">
+<h3>Intuition for the Orthogonality Principle in Linear Models via
+Partialling Out One way to think about estimation of <span class="math inline">\(\alpha_0\)</span> is to think of the regression
+model:</h3>
+<p><span class="math display">\[
+`R`ho^y_i = \alpha_0 `R`ho^d_i + \epsilon_i,  
+\]</span> where <span class="math inline">\(`R`ho^y_i\)</span> is the
+residual that is left after partialling out the linear effect of <span class="math inline">\(x_i\)</span> from <span class="math inline">\(y_i\)</span> and <span class="math inline">\(`R`ho^d_i\)</span> is the residual that is left
+after partialling out the linear effect of <span class="math inline">\(x_i\)</span> from <span class="math inline">\(d_i\)</span>, both done in the population. Note
+that we have <span class="math inline">\(\mathbb{E} `R`ho^y_i x_i
+=0\)</span>, i.e. <span class="math inline">\(`R`ho^y_i = y_i -
+x_i&#39;\pi^y_0\)</span> where <span class="math inline">\(x_i&#39;\pi^y_0\)</span> is the linear projection
+of <span class="math inline">\(y_i\)</span> on <span class="math inline">\(x_i\)</span>. After partialling out, <span class="math inline">\(\alpha_0\)</span> is the population regression
+coefficient in the univariate regression of <span class="math inline">\(`R`ho^y_i\)</span> on <span class="math inline">\(`R`ho^d_i\)</span>. This is the
+Frisch-Waugh-Lovell theorem. Thus, <span class="math inline">\(\alpha=\alpha_0\)</span> solves the population
+equation: <span class="math display">\[
+\mathbb{E} (`R`ho^y_i - \alpha `R`ho^d_i)`R`ho^d_i = 0.
+\]</span> The score associated to this equation is: <span class="math display">\[
+\psi(w_i, \alpha, \eta) = (y_i - x_i&#39;\pi^y) - \alpha (d_i -
+x_i&#39;\pi^d))(d_i - x_i&#39;\pi^d),  \quad \eta = (\pi^{y&#39;},
+\pi^{d&#39;})&#39;,
+\]</span> <span class="math display">\[
+\psi(w_i, \alpha_0, \eta_0) = (`R`ho^y_i - \alpha `R`ho^d_i)`R`ho^d_i,
+\quad \eta_0 = (\pi^{y&#39;}_0, \pi^{d&#39;}_0).
+\]</span></p>
+<p>It is straightforward to check that this score obeys the
+orthogonality principle; moreover, this score is the semi-parametrically
+efficient score for estimating the regression coefficient <span class="math inline">\(\alpha_0\)</span>.</p>
+<p>In <strong>low-dimensional settings</strong>, the empirical version
+of the partialling out approach is simply another way to do the least
+squares. Let’s verify this in an example. First, we generate some
+data</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">5000</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), <span class="at">ncol =</span> p)</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="fu">colnames</span>(X) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;d&quot;</span>, <span class="fu">paste</span>(<span class="st">&quot;x&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">19</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>xnames <span class="ot">=</span> <span class="fu">colnames</span>(X)[<span class="sc">-</span><span class="dv">1</span>]</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">20</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>dat <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">y =</span> y, X)</span></code></pre></div>
+<p>We can estimate <span class="math inline">\(\alpha_0\)</span> by
+running full least squares:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># full fit</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>fmla <span class="ot">=</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;y ~ &quot;</span>, <span class="fu">paste</span>(<span class="fu">colnames</span>(X), <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>full.fit <span class="ot">=</span> <span class="fu">lm</span>(fmla, <span class="at">data =</span> dat)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="fu">summary</span>(full.fit)<span class="sc">$</span>coef[<span class="st">&quot;d&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##   Estimate Std. Error 
+## 0.97807455 0.01371225</code></pre>
+<p>Another way to estimate <span class="math inline">\(\alpha_0\)</span>
+is to first partial out the <span class="math inline">\(x\)</span>-variables from <span class="math inline">\(y_i\)</span> and <span class="math inline">\(d_i\)</span>, and run least squares on the
+residuals:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>fmla.y <span class="ot">=</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;y ~ &quot;</span>, <span class="fu">paste</span>(xnames, <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>fmla.d <span class="ot">=</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;d ~ &quot;</span>, <span class="fu">paste</span>(xnames, <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="co"># partial fit via ols</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>rY <span class="ot">=</span> <span class="fu">lm</span>(fmla.y, <span class="at">data =</span> dat)<span class="sc">$</span>res</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>rD <span class="ot">=</span> <span class="fu">lm</span>(fmla.d, <span class="at">data =</span> dat)<span class="sc">$</span>res</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>partial.fit.ls <span class="ot">=</span> <span class="fu">lm</span>(rY <span class="sc">~</span> rD)</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="fu">summary</span>(partial.fit.ls)<span class="sc">$</span>coef[<span class="st">&quot;rD&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##   Estimate Std. Error 
+## 0.97807455 0.01368616</code></pre>
+<p>One can see that the estimates are identical, while standard errors
+are nearly identical. In fact, the standard errors are asymptotically
+equivalent due to the orthogonality property of the estimating equations
+associated with the partialling out approach.</p>
+<p>In <strong>high-dimensional settings</strong>, we can no longer rely
+on the full least-squares and instead may rely on Lasso or Post-Lasso
+for partialling out. This amounts to using orthogonal estimating
+equations, where we estimate the nuisance parameters by Lasso or
+Post-Lasso. Let’s try this in the above example, using Post-Lasso for
+partialling out:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># partial fit via post-lasso</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>rY <span class="ot">=</span> <span class="fu">rlasso</span>(fmla.y, <span class="at">data =</span> dat)<span class="sc">$</span>res</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>rD <span class="ot">=</span> <span class="fu">rlasso</span>(fmla.d, <span class="at">data =</span> dat)<span class="sc">$</span>res</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>partial.fit.postlasso <span class="ot">=</span> <span class="fu">lm</span>(rY <span class="sc">~</span> rD)</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="fu">summary</span>(partial.fit.postlasso)<span class="sc">$</span>coef[<span class="st">&quot;rD&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##   Estimate Std. Error 
+## 0.97273870 0.01368677</code></pre>
+<p>We see that this estimate and standard errors are nearly identical to
+the previous estimates given above. In fact they are asymptotically
+equivalent to the previous estimates in the low-dimensional settings,
+with the advantage that, unlike the previous estimates, they will
+continue to be valid in the high-dimensional settings.</p>
+<p>The orthogonal estimating equations method – based on partialling out
+via Lasso or post-Lasso – is implemented by the function
+<code>rlassoEffect</code>, using
+<code>method= &quot;partialling out&quot;</code>:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>Eff <span class="ot">=</span> <span class="fu">rlassoEffect</span>(X[, <span class="sc">-</span><span class="dv">1</span>], y, X[, <span class="dv">1</span>], <span class="at">method =</span> <span class="st">&quot;partialling out&quot;</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="fu">summary</span>(Eff)<span class="sc">$</span>coef[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##  Estimate. Std. Error 
+## 0.97273870 0.01368677</code></pre>
+<p>Another orthogonal estimating equations method – based on the double
+selection of covariates – is implemented by the the function
+<code>rlassoEffect</code>, using
+<code>method= &quot;double selection&quot;</code>. Algorithmically the method is
+as follows:</p>
+<ol style="list-style-type: decimal">
+<li>Select controls <span class="math inline">\(x_{ij}\)</span>’s that
+predict <span class="math inline">\(y_i\)</span> by Lasso.</li>
+<li>Select controls <span class="math inline">\(x_{ij}\)</span>’s that
+predict <span class="math inline">\(d_i\)</span> by Lasso.</li>
+<li>Run OLS of <span class="math inline">\(y_i\)</span> on <span class="math inline">\(d_i\)</span> and the union of controls selected in
+steps 1 and 2.</li>
+</ol>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>Eff <span class="ot">=</span> <span class="fu">rlassoEffect</span>(X[, <span class="sc">-</span><span class="dv">1</span>], y, X[, <span class="dv">1</span>], <span class="at">method =</span> <span class="st">&quot;double selection&quot;</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="fu">summary</span>(Eff)<span class="sc">$</span>coef[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##  Estimate. Std. Error 
+## 0.97807455 0.01415624</code></pre>
+</div>
+<div id="inference-confidence-intervals-and-significance-testing" class="section level3">
+<h3>Inference: Confidence Intervals and Significance Testing</h3>
+<p>The function <code>rlassoEffects</code> does inference – namely
+construction of confidence intervals and significance testing – for
+target variables. Those can be specified either by the variable names,
+an integer valued vector giving their position in <code>x</code> or by a
+logical vector indicating the variables for which inference should be
+conducted. It returns an object of S3 class <code>rlassoEffects</code>
+for which the methods <code>summary</code>, <code>print</code>,
+<code>confint</code>, and <code>plot</code> are provided.
+<code>rlassoEffects</code> is a wrap function for the function
+<code>rlassoEffect</code> which does inference for a single target
+regressor. The theoretical underpinning is given in <span class="citation">Alexandre Belloni, Chernozhukov, and Hansen
+(2014)</span> and for a more general class of models in <span class="citation">A. Belloni, Chernozhukov, and Kato (2014)</span>. The
+function <code>rlassoEffects</code> might either be used in the form
+<code>rlassoEffects(x, y, index)</code> where <code>x</code> is a
+matrix, <code>y</code> denotes the outcome variable and
+<code>index</code> specifies the variables of <code>x</code> for which
+inference is conducted. This can done by an integer vector (position of
+the variables), a logical vector or the name of the variables. An
+alternative usage is as <code>rlassoEffects(formula, data, I)</code>
+where <code>I</code> is a one-sided formula which specifies the
+variables for which is inference is conducted. For further details we
+refer to the help page of the function and the following examples where
+both methods for usage are shown.</p>
+<p>Here is an example of the use.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">100</span>  <span class="co">#sample size</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">100</span>  <span class="co"># number of variables</span></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>s <span class="ot">=</span> <span class="dv">3</span>  <span class="co"># nubmer of non-zero variables</span></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), <span class="at">ncol =</span> p)</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a><span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span><span class="sc">:</span>p, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">3</span>, s), <span class="fu">rep</span>(<span class="dv">0</span>, p <span class="sc">-</span> s))</span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>y <span class="ot">=</span> <span class="dv">1</span> <span class="sc">+</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a>data <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="fu">cbind</span>(y, X))</span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="fu">colnames</span>(data)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">&quot;y&quot;</span></span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a>fm <span class="ot">=</span> <span class="fu">paste</span>(<span class="st">&quot;y ~&quot;</span>, <span class="fu">paste</span>(<span class="fu">colnames</span>(X), <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>))</span>
+<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a>fm <span class="ot">=</span> <span class="fu">as.formula</span>(fm)</span></code></pre></div>
+<p>We can do inference on a set of variables of interest, e.g. the
+first, second, third, and the fiftieth:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="co"># lasso.effect = rlassoEffects(X, y, index=c(1,2,3,50))</span></span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>lasso.effect <span class="ot">=</span> <span class="fu">rlassoEffects</span>(fm, <span class="at">I =</span> <span class="sc">~</span>X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3 <span class="sc">+</span> X50, <span class="at">data =</span> data)</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">print</span>(lasso.effect)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## rlassoEffects.formula(formula = fm, data = data, I = ~X1 + X2 + 
+##     X3 + X50)
+## 
+## Coefficients:
+##      X1       X2       X3      X50  
+## 2.94448  3.04127  2.97540  0.07196</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="fu">summary</span>(lasso.effect)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables&quot;
+##     Estimate. Std. Error t value Pr(&gt;|t|)    
+## X1    2.94448    0.08815  33.404   &lt;2e-16 ***
+## X2    3.04127    0.08389  36.253   &lt;2e-16 ***
+## X3    2.97540    0.07804  38.127   &lt;2e-16 ***
+## X50   0.07196    0.07765   0.927    0.354    
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">confint</span>(lasso.effect)</span></code></pre></div>
+<pre><code>##           2.5 %    97.5 %
+## X1   2.77171308 3.1172421
+## X2   2.87685121 3.2056979
+## X3   2.82244962 3.1283583
+## X50 -0.08022708 0.2241377</code></pre>
+<p>The two methods are first-order equivalent in both low-dimensional
+and high-dimensional settings under regularity conditions. Not
+surprisingly we see that in the numerical example of this section, the
+estimates and standard errors produced by the two methods are very close
+to each other.</p>
+<p>It is also possible to estimate joint confidence intervals. The
+method relies on a multiplier bootstrap method as described in <span class="citation">A. Belloni, Chernozhukov, and Kato (2014)</span>. Joint
+confidence intervals can be invoked by setting the option
+<code>joint</code> to <code>TRUE</code> in the method
+<code>confint</code> for objects of class <code>rlassoEffects</code>. We
+will also demonstrate the application of joint confidence intervals in
+an empirical application in the next section.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="fu">confint</span>(lasso.effect, <span class="at">level =</span> <span class="fl">0.95</span>, <span class="at">joint =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>##          2.5 %    97.5 %
+## X1   2.7279477 3.1610075
+## X2   2.8371214 3.2454278
+## X3   2.7833176 3.1674903
+## X50 -0.1154509 0.2593615</code></pre>
+<p>Finally, we can also plot the estimated effects with their confidence
+intervals:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="fu">plot</span>(lasso.effect, <span class="at">main =</span> <span class="st">&quot;Confidence Intervals&quot;</span>)</span></code></pre></div>
+<p>For logistic regression we provide the functions
+<code>rlassologit</code> and <code>rlassologitEffects</code>. Further
+information can be found in the help.</p>
+</div>
+<div id="application-the-effect-of-gender-on-wage" class="section level3">
+<h3>Application: the effect of gender on wage</h3>
+<p>In Labor Economics an important question is how the wage is related
+to the gender of the employed. We use US census data from the year 2012
+to analyse the effect of gender and interaction effects of other
+variables with gender on wage jointly. The dependent variable is the
+logarithm of the wage, the target variable is <code>female</code> (in
+combination with other variables). All other variables denote some other
+socio-economic characteristics, e.g. marital status, education, and
+experience. For a detailed description of the variables we refer to the
+help page.</p>
+<p>First, we load and prepare the data.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="fu">library</span>(hdm)</span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a><span class="fu">data</span>(cps2012)</span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~-</span><span class="dv">1</span> <span class="sc">+</span> female <span class="sc">+</span> female<span class="sc">:</span>(widowed <span class="sc">+</span> divorced <span class="sc">+</span> separated <span class="sc">+</span> nevermarried <span class="sc">+</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a>    hsd08 <span class="sc">+</span> hsd911 <span class="sc">+</span> hsg <span class="sc">+</span> cg <span class="sc">+</span> ad <span class="sc">+</span> mw <span class="sc">+</span> so <span class="sc">+</span> we <span class="sc">+</span> exp1 <span class="sc">+</span> exp2 <span class="sc">+</span> exp3) <span class="sc">+</span> <span class="sc">+</span>(widowed <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>    divorced <span class="sc">+</span> separated <span class="sc">+</span> nevermarried <span class="sc">+</span> hsd08 <span class="sc">+</span> hsd911 <span class="sc">+</span> hsg <span class="sc">+</span> cg <span class="sc">+</span> ad <span class="sc">+</span> mw <span class="sc">+</span> so <span class="sc">+</span></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a>    we <span class="sc">+</span> exp1 <span class="sc">+</span> exp2 <span class="sc">+</span> exp3)<span class="sc">^</span><span class="dv">2</span>, <span class="at">data =</span> cps2012)</span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="fu">dim</span>(X)</span></code></pre></div>
+<pre><code>## [1] 29217   136</code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>X <span class="ot">&lt;-</span> X[, <span class="fu">which</span>(<span class="fu">apply</span>(X, <span class="dv">2</span>, var) <span class="sc">!=</span> <span class="dv">0</span>)]  <span class="co"># exclude all constant variables</span></span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="fu">dim</span>(X)</span></code></pre></div>
+<pre><code>## [1] 29217   116</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a>index.gender <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">&quot;female&quot;</span>, <span class="fu">colnames</span>(X))</span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a>y <span class="ot">&lt;-</span> cps2012<span class="sc">$</span>lnw</span></code></pre></div>
+<p>The parameter estimates for the target parameters, i.e. all
+coefficients related to gender (i.e. by interaction with other
+variables) are calculated and summarized by the following commands</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a>effects.female <span class="ot">&lt;-</span> <span class="fu">rlassoEffects</span>(<span class="at">x =</span> X, <span class="at">y =</span> y, <span class="at">index =</span> index.gender)</span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a><span class="fu">summary</span>(effects.female)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables&quot;
+##                     Estimate. Std. Error t value Pr(&gt;|t|)
+## female              -0.154923   0.050162  -3.088 0.002012
+## female:widowed       0.136095   0.090663   1.501 0.133325
+## female:divorced      0.136939   0.022182   6.174 6.68e-10
+## female:separated     0.023303   0.053212   0.438 0.661441
+## female:nevermarried  0.186853   0.019942   9.370  &lt; 2e-16
+## female:hsd08         0.027810   0.120914   0.230 0.818092
+## female:hsd911       -0.119335   0.051880  -2.300 0.021435
+## female:hsg          -0.012890   0.019223  -0.671 0.502518
+## female:cg            0.010139   0.018327   0.553 0.580114
+## female:ad           -0.030464   0.021806  -1.397 0.162405
+## female:mw           -0.001063   0.019192  -0.055 0.955811
+## female:so           -0.008183   0.019357  -0.423 0.672468
+## female:we           -0.004226   0.021168  -0.200 0.841760
+## female:exp1          0.004935   0.007804   0.632 0.527139
+## female:exp2         -0.159519   0.045300  -3.521 0.000429
+## female:exp3          0.038451   0.007861   4.891 1.00e-06
+##                        
+## female              ** 
+## female:widowed         
+## female:divorced     ***
+## female:separated       
+## female:nevermarried ***
+## female:hsd08           
+## female:hsd911       *  
+## female:hsg             
+## female:cg              
+## female:ad              
+## female:mw              
+## female:so              
+## female:we              
+## female:exp1            
+## female:exp2         ***
+## female:exp3         ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Finally, we estimate and plot confident intervals, first “pointwise”
+and then the joint confidence intervals.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a>joint.CI <span class="ot">&lt;-</span> <span class="fu">confint</span>(effects.female, <span class="at">level =</span> <span class="fl">0.95</span>, <span class="at">joint =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a>joint.CI</span></code></pre></div>
+<pre><code>##                           2.5 %      97.5 %
+## female              -0.29371915 -0.01612742
+## female:widowed      -0.13269246  0.40488343
+## female:divorced      0.07502240  0.19885637
+## female:separated    -0.11620865  0.16281418
+## female:nevermarried  0.12946677  0.24424019
+## female:hsd08        -0.37304271  0.42866333
+## female:hsd911       -0.26848181  0.02981173
+## female:hsg          -0.06494993  0.03917037
+## female:cg           -0.04149375  0.06177085
+## female:ad           -0.09559976  0.03467227
+## female:mw           -0.05451332  0.05238644
+## female:so           -0.06252288  0.04615620
+## female:we           -0.06540597  0.05695371
+## female:exp1         -0.01641765  0.02628817
+## female:exp2         -0.28369250 -0.03534615
+## female:exp3          0.01692615  0.05997501</code></pre>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a><span class="co"># plot(effects.female, joint=TRUE, level=0.95) # plot of the effects</span></span></code></pre></div>
+<p>This analysis allows a closer look how discrimination according to
+gender is related to other socio-economic variables.</p>
+<p>As a side remark, the version 0.2 allows also now a formula interface
+for many functions including <code>rlassoEffects</code>. Hence, the
+analysis could also be done more compact as</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a>effects.female <span class="ot">&lt;-</span> <span class="fu">rlassoEffects</span>(lnw <span class="sc">~</span> female <span class="sc">+</span> female<span class="sc">:</span>(widowed <span class="sc">+</span> divorced <span class="sc">+</span> separated <span class="sc">+</span></span>
+<span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a>    nevermarried <span class="sc">+</span> hsd08 <span class="sc">+</span> hsd911 <span class="sc">+</span> hsg <span class="sc">+</span> cg <span class="sc">+</span> ad <span class="sc">+</span> mw <span class="sc">+</span> so <span class="sc">+</span> we <span class="sc">+</span> exp1 <span class="sc">+</span> exp2 <span class="sc">+</span></span>
+<span id="cb45-3"><a href="#cb45-3" tabindex="-1"></a>    exp3) <span class="sc">+</span> (widowed <span class="sc">+</span> divorced <span class="sc">+</span> separated <span class="sc">+</span> nevermarried <span class="sc">+</span> hsd08 <span class="sc">+</span> hsd911 <span class="sc">+</span> hsg <span class="sc">+</span></span>
+<span id="cb45-4"><a href="#cb45-4" tabindex="-1"></a>    cg <span class="sc">+</span> ad <span class="sc">+</span> mw <span class="sc">+</span> so <span class="sc">+</span> we <span class="sc">+</span> exp1 <span class="sc">+</span> exp2 <span class="sc">+</span> exp3)<span class="sc">^</span><span class="dv">2</span>, <span class="at">data =</span> cps2012, <span class="at">I =</span> <span class="sc">~</span>female <span class="sc">+</span></span>
+<span id="cb45-5"><a href="#cb45-5" tabindex="-1"></a>    female<span class="sc">:</span>(widowed <span class="sc">+</span> divorced <span class="sc">+</span> separated <span class="sc">+</span> nevermarried <span class="sc">+</span> hsd08 <span class="sc">+</span> hsd911 <span class="sc">+</span> hsg <span class="sc">+</span></span>
+<span id="cb45-6"><a href="#cb45-6" tabindex="-1"></a>        cg <span class="sc">+</span> ad <span class="sc">+</span> mw <span class="sc">+</span> so <span class="sc">+</span> we <span class="sc">+</span> exp1 <span class="sc">+</span> exp2 <span class="sc">+</span> exp3))</span></code></pre></div>
+<p>The one-sided option <code>I</code> gives the target variables for
+which inference is conducted.</p>
+</div>
+<div id="application-estimation-of-the-treatment-effect-in-a-linear-model-with-many-confounding-factors" class="section level3">
+<h3>Application: Estimation of the treatment effect in a linear model
+with many confounding factors</h3>
+<p>A part of empirical growth literature has focused on estimating the
+effect of an initial (lagged) level of GDP (Gross Domestic Product) per
+capita on the growth rates of GDP per capita. In particular, a key
+prediction from the classical Solow-Swan-Ramsey growth model is the
+hypothesis of convergence, which states that poorer countries should
+typically grow faster and therefore should tend to catch up with the
+richer countries, conditional on a set of institutional and societal
+characteristics. Covariates that describe such characteristics include
+variables measuring education and science policies, strength of market
+institutions, trade openness, savings rates and others.</p>
+<p>Thus, we are interested in a specification of the form:</p>
+<p><span class="math display">\[y_i = \alpha_0 d_i+ \sum_{j=1}^p \beta_j
+x_{ij} + \varepsilon_i, \]</span> where <span class="math inline">\(y_i\)</span> is the growth rate of GDP over a
+specified decade in country <span class="math inline">\(i\)</span>,
+<span class="math inline">\(d_i\)</span> is the log of the initial level
+of GDP at the beginning of the specified period, and the <span class="math inline">\(x_{ij}\)</span>’s form a long list of country
+<span class="math inline">\(i\)</span>’s characteristics at the
+beginning of the specified period. We are interested in testing the
+hypothesis of convergence, namely that <span class="math inline">\(\alpha_1 &lt; 0\)</span>. Given that in the <span class="citation">Barro and Lee (1994)</span> data, the number of
+covariates <span class="math inline">\(p\)</span> is large relative to
+the sample size <span class="math inline">\(n\)</span>, covariate
+selection becomes a crucial issue in this analysis. We employ here the
+partialling out approach (as well as the double selection version)
+introduced in the previous section.</p>
+<p>First, we load and prepare the data</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="fu">data</span>(GrowthData)</span>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a><span class="fu">dim</span>(GrowthData)</span></code></pre></div>
+<pre><code>## [1] 90 63</code></pre>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a>y <span class="ot">=</span> GrowthData[, <span class="dv">1</span>, drop <span class="ot">=</span> F]</span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a>d <span class="ot">=</span> GrowthData[, <span class="dv">3</span>, drop <span class="ot">=</span> F]</span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">as.matrix</span>(GrowthData)[, <span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)]</span>
+<span id="cb48-4"><a href="#cb48-4" tabindex="-1"></a>varnames <span class="ot">=</span> <span class="fu">colnames</span>(GrowthData)</span></code></pre></div>
+<p>Now we can estimate the effect of the initial GDP level. First, we
+estimate by OLS:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" tabindex="-1"></a>xnames <span class="ot">=</span> varnames[<span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)]  <span class="co"># names of X variables</span></span>
+<span id="cb49-2"><a href="#cb49-2" tabindex="-1"></a>dandxnames <span class="ot">=</span> varnames[<span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)]  <span class="co"># names of D and X variables</span></span>
+<span id="cb49-3"><a href="#cb49-3" tabindex="-1"></a><span class="co"># create formulas by pasting names (this saves typing times)</span></span>
+<span id="cb49-4"><a href="#cb49-4" tabindex="-1"></a>fmla <span class="ot">=</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;Outcome ~ &quot;</span>, <span class="fu">paste</span>(dandxnames, <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span>
+<span id="cb49-5"><a href="#cb49-5" tabindex="-1"></a>ls.effect <span class="ot">=</span> <span class="fu">lm</span>(fmla, <span class="at">data =</span> GrowthData)</span></code></pre></div>
+<p>Second, we estimate the effect by the partialling out by
+Post-Lasso:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" tabindex="-1"></a>dX <span class="ot">=</span> <span class="fu">as.matrix</span>(<span class="fu">cbind</span>(d, X))</span>
+<span id="cb50-2"><a href="#cb50-2" tabindex="-1"></a>lasso.effect <span class="ot">=</span> <span class="fu">rlassoEffect</span>(<span class="at">x =</span> X, <span class="at">y =</span> y, <span class="at">d =</span> d, <span class="at">method =</span> <span class="st">&quot;partialling out&quot;</span>)</span>
+<span id="cb50-3"><a href="#cb50-3" tabindex="-1"></a><span class="fu">summary</span>(lasso.effect)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables&quot;
+##      Estimate. Std. Error t value Pr(&gt;|t|)    
+## [1,]  -0.04981    0.01394  -3.574 0.000351 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Third, we estimate the effect by the double selection method:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a>dX <span class="ot">=</span> <span class="fu">as.matrix</span>(<span class="fu">cbind</span>(d, X))</span>
+<span id="cb52-2"><a href="#cb52-2" tabindex="-1"></a>doublesel.effect <span class="ot">=</span> <span class="fu">rlassoEffect</span>(<span class="at">x =</span> X, <span class="at">y =</span> y, <span class="at">d =</span> d, <span class="at">method =</span> <span class="st">&quot;double selection&quot;</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" tabindex="-1"></a><span class="fu">summary</span>(doublesel.effect)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables&quot;
+##          Estimate. Std. Error t value Pr(&gt;|t|)   
+## gdpsh465  -0.05001    0.01579  -3.167  0.00154 **
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>We then collect results in a nice table:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb54-2"><a href="#cb54-2" tabindex="-1"></a>table <span class="ot">=</span> <span class="fu">rbind</span>(<span class="fu">summary</span>(ls.effect)<span class="sc">$</span>coef[<span class="st">&quot;gdpsh465&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">summary</span>(lasso.effect)<span class="sc">$</span>coef[,</span>
+<span id="cb54-3"><a href="#cb54-3" tabindex="-1"></a>    <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">summary</span>(doublesel.effect)<span class="sc">$</span>coef[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb54-4"><a href="#cb54-4" tabindex="-1"></a><span class="fu">colnames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Estimate&quot;</span>, <span class="st">&quot;Std. Error&quot;</span>)  <span class="co">#names(summary(full.fit)$coef)[1:2]</span></span>
+<span id="cb54-5"><a href="#cb54-5" tabindex="-1"></a><span class="fu">rownames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;full reg via ols&quot;</span>, <span class="st">&quot;partial reg</span></span>
+<span id="cb54-6"><a href="#cb54-6" tabindex="-1"></a><span class="st">via post-lasso &quot;</span>, <span class="st">&quot;partial reg via double selection&quot;</span>)</span>
+<span id="cb54-7"><a href="#cb54-7" tabindex="-1"></a><span class="fu">kable</span>(table)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Estimate</th>
+<th align="right">Std. Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">full reg via ols</td>
+<td align="right">-0.0093780</td>
+<td align="right">0.0298877</td>
+</tr>
+<tr class="even">
+<td align="left">partial reg</td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">via post-lasso</td>
+<td align="right">-0.0498115</td>
+<td align="right">0.0139364</td>
+</tr>
+<tr class="even">
+<td align="left">partial reg via double selection</td>
+<td align="right">-0.0500059</td>
+<td align="right">0.0157914</td>
+</tr>
+</tbody>
+</table>
+<p>We see that the OLS estimates are noisy, which is not surprising
+given that <span class="math inline">\(p\)</span> is comparable to <span class="math inline">\(n\)</span>. The partial regression approaches,
+based on Lasso selection of covariates in the two projection equations,
+in contrast yields much more precise estimates, which does support the
+hypothesis of conditional convergence. We note that the partial
+regression approaches represent a special case of the orthogonal
+estimating equations approach.</p>
+</div>
+</div>
+<div id="instrumental-variable-estimation-in-a-high-dimensional-setting" class="section level2">
+<h2>Instrumental Variable Estimation in a High-Dimensional Setting</h2>
+<p>In many applied settings the researcher is interested in estimating
+the (structural) effect of a variable (treatment variable), but this
+variable is endogenous, i.e. correlated with the error term. In this
+case, instrumental variables (IV) methods are used for identification of
+the causal parameters.</p>
+<p>We consider the linear instrumental variables model: <span class="math display">\[\begin{eqnarray}
+y_i &amp;=&amp; \alpha_0 d_i + \gamma_0 x_i&#39; + \varepsilon_i,\\
+d_i &amp;=&amp; z_i&#39; \Pi + \beta_0 x_i&#39; + v_i,
+\end{eqnarray}\]</span> where <span class="math inline">\(\mathbb{E}[\varepsilon_i (x_i&#39;, z_i&#39;)]=
+0\)</span>, <span class="math inline">\(\mathbb{E}[v_i (x_i&#39;,
+z_i&#39;)]=0\)</span>, but <span class="math inline">\(\mathbb{E}[\varepsilon_i v_i] \neq 0\)</span>
+leading to endogeneity. In this setting <span class="math inline">\(d_i\)</span> is a scalar endogenous variable of
+interest, <span class="math inline">\(z_i\)</span> is a <span class="math inline">\(p_z\)</span>-dimensional vector of instruments and
+<span class="math inline">\(x_i\)</span> is a <span class="math inline">\(p_x\)</span>-dimensional vector of control
+variables.</p>
+<p>In this section we present methods to estimate the effect <span class="math inline">\(\alpha_0\)</span> in a setting where either <span class="math inline">\(x\)</span> is high-dimensional or <span class="math inline">\(z\)</span> is high-dimensional. Instrumental
+variables estimation with very many instruments was analysed in <span class="citation">Alexandre Belloni et al. (2012)</span>], the extension
+with many instruments and many controls in <span class="citation">Victor
+Chernozhukov, Hansen, and Spindler (2015a)</span>.</p>
+<div id="estimation-and-inference" class="section level3">
+<h3>Estimation and Inference</h3>
+<p>To get efficient estimators and uniformly valid confidence intervals
+for the structural parameters there are different strategies which are
+asymptotically equivalent where again orthogonalization (via partialling
+out) is a key concept.</p>
+<p>In the case of the high-dimensional instrument <span class="math inline">\(z_i\)</span> and low-dimensional <span class="math inline">\(x_i\)</span>. We predict the endogenous variable
+<span class="math inline">\(d_i\)</span> using (Post-)Lasso regression
+of <span class="math inline">\(d_i\)</span> on the instruments <span class="math inline">\(z_i\)</span> and <span class="math inline">\(x_i\)</span>, forcing the inclusion of <span class="math inline">\(x_i\)</span>. Then we compute the IV estimator
+(2SLS) <span class="math inline">\(\hat \alpha\)</span> of the parameter
+<span class="math inline">\(\alpha_0\)</span> using the predicted value
+<span class="math inline">\(\hat d_i\)</span> as instrument and using
+<span class="math inline">\(x_i\)</span>’s as controls. We then perform
+inference on <span class="math inline">\(\alpha_0\)</span> using <span class="math inline">\(\hat \alpha\)</span> and conventional
+heteroscedasticity robust standard errors.</p>
+<p>In the case of the low-dimensional instrument <span class="math inline">\(z_i\)</span> and high-dimensional <span class="math inline">\(x_i\)</span>, we first partial out the effect of
+<span class="math inline">\(x_i\)</span> from <span class="math inline">\(d_i\)</span>, <span class="math inline">\(y_i\)</span>, and <span class="math inline">\(z_i\)</span> by (Post-)Lasso. Second, we then use
+the residuals to compute the IV estimator (2SLS) <span class="math inline">\(\hat \alpha\)</span> of the parameter <span class="math inline">\(\alpha_0\)</span>. We then perform inference on
+<span class="math inline">\(\alpha_0\)</span> using <span class="math inline">\(\hat \alpha\)</span> and conventional
+heteroscedasticity robust standard errors.</p>
+<p>In the case of the high-dimensional instrument <span class="math inline">\(z_i\)</span> and high-dimensional <span class="math inline">\(x_i\)</span> the algorithm described in <span class="citation">Victor Chernozhukov, Hansen, and Spindler
+(2015a)</span> is adopted.</p>
+</div>
+<div id="r-implementation-1" class="section level3">
+<h3>R Implementation</h3>
+<p>The wrap function <code>rlassoIV</code> handles all of the previous
+cases. It has the options <code>select.X</code> and
+<code>select.Z</code> which implement selection of either covariates or
+instruments, both with default values set to <code>TRUE</code>. The
+class of the return object depends on the chosen options, but the
+methods <code>summary</code>, <code>print</code> and
+<code>confint</code> are available for all. The functions
+<code>rlassoSelectX</code> and <code>rlassoSelectZ</code> do selection
+on <span class="math inline">\(x\)</span>-variables only and <span class="math inline">\(z\)</span>-variables only. Selection on both is
+done in <code>rlassoIV</code>. All functions employ the option
+<code>post = TRUE</code> as default, which uses post-Lasso for
+partialling out. By setting <code>post = FALSE</code> we can employ
+Lasso instead of Post-Lasso. Finally, the package provides the standard
+function <code>tsls</code>, which implements the ” classical” two-stage
+least squares estimation.</p>
+<p><strong>Function usage</strong> Both the family of
+<code>rlassoIV</code>-functions and the family of the functions for
+treatment effects , which are introduced in the next section, allow use
+with both formula-interface and by handing over the prepared model
+matrices. Hence the general pattern for use with formula is
+<code>function(formula, data, ...)</code> where formula consists of
+two-parts and is a member of the class<code>Formula</code>. These
+formulas are of the pattern <code>y ~ d + x | x + z</code> where
+<code>y</code> is the outcome variable, <code>x</code> are exogenous
+variables, <code>d</code> endogenous variables (if several ones are
+allowed depends on the concrete function), and <code>z</code> denote the
+instrumental variables. A more primitive use of the functions is by
+simply hand over the required group of variables as matrices:
+<code>function(x=x, d= d, y=y, z=z)</code>. In some of the following
+examples both alternatives are displayed.</p>
+</div>
+<div id="application-economic-development-and-institutions" class="section level3">
+<h3>Application: Economic Development and Institutions</h3>
+<p>Estimating the causal effect of institutions on output is complicated
+by the simultaneity between institutions and output: specifically,
+better institutions may lead to higher incomes, but higher incomes may
+also lead to the development of better institutions. To help overcome
+this simultaneity, <span class="citation">Acemoglu, Johnson, and
+Robinson (2001)</span> use mortality rates for early European settlers
+as an instrument for institution quality. The validity of this
+instrument hinges on the argument that settlers set up better
+institutions in places where they are more likely to establish long-term
+settlements, that where they are likely to settle for the long term is
+related to settler mortality at the time of initial colonization, and
+that institutions are highly persistent. The exclusion restriction for
+the instrumental variable is then motivated by the argument that GDP,
+while persistent, is unlikely to be strongly influenced by mortality in
+the previous century, or earlier, except through institutions.</p>
+<p>In this application, we consider the problem of selecting controls.
+The input raw controls are the Latitude and the continental dummies. The
+technical controls can include various polynomial transformations of the
+Latitude, possibly interacted with the continental dummies. Such
+flexible specifications of raw controls results in the high-dimensional
+<span class="math inline">\(x\)</span>, with dimension comparable to the
+sample size.</p>
+<p>First, we process the data</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" tabindex="-1"></a><span class="fu">data</span>(AJR)</span>
+<span id="cb55-2"><a href="#cb55-2" tabindex="-1"></a>y <span class="ot">=</span> AJR<span class="sc">$</span>GDP</span>
+<span id="cb55-3"><a href="#cb55-3" tabindex="-1"></a>d <span class="ot">=</span> AJR<span class="sc">$</span>Exprop</span>
+<span id="cb55-4"><a href="#cb55-4" tabindex="-1"></a>z <span class="ot">=</span> AJR<span class="sc">$</span>logMort</span>
+<span id="cb55-5"><a href="#cb55-5" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">model.matrix</span>(<span class="sc">~-</span><span class="dv">1</span> <span class="sc">+</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span> Samer)<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb55-6"><a href="#cb55-6" tabindex="-1"></a>    <span class="at">data =</span> AJR)</span>
+<span id="cb55-7"><a href="#cb55-7" tabindex="-1"></a><span class="fu">dim</span>(x)</span></code></pre></div>
+<pre><code>## [1] 64 21</code></pre>
+<p>Then we estimate an IV model with selection on the <span class="math inline">\(X\)</span></p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" tabindex="-1"></a><span class="co"># AJR.Xselect = rlassoIV(x=x, d=d, y=y, z=z, select.X=TRUE, select.Z=FALSE)</span></span>
+<span id="cb57-2"><a href="#cb57-2" tabindex="-1"></a>AJR.Xselect <span class="ot">=</span> <span class="fu">rlassoIV</span>(GDP <span class="sc">~</span> Exprop <span class="sc">+</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span></span>
+<span id="cb57-3"><a href="#cb57-3" tabindex="-1"></a>    Samer)<span class="sc">^</span><span class="dv">2</span> <span class="sc">|</span> logMort <span class="sc">+</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span> Samer)<span class="sc">^</span><span class="dv">2</span>,</span>
+<span id="cb57-4"><a href="#cb57-4" tabindex="-1"></a>    <span class="at">data =</span> AJR, <span class="at">select.X =</span> <span class="cn">TRUE</span>, <span class="at">select.Z =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb57-5"><a href="#cb57-5" tabindex="-1"></a><span class="fu">summary</span>(AJR.Xselect)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimation and significance testing of the effect of target variables in the IV regression model&quot;
+##        coeff.    se. t-value p-value   
+## Exprop 0.8450 0.2699   3.131 0.00174 **
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" tabindex="-1"></a><span class="fu">confint</span>(AJR.Xselect)</span></code></pre></div>
+<pre><code>##            2.5 %   97.5 %
+## Exprop 0.3159812 1.374072</code></pre>
+<p>It is interesting to understand what the procedure above is doing. In
+essence, it partials out <span class="math inline">\(x_i\)</span> from
+<span class="math inline">\(y_i\)</span>, <span class="math inline">\(d_i\)</span> and <span class="math inline">\(z_i\)</span> using Post-Lasso and applies the 2SLS
+to the residual quantities.</p>
+<p>Let us investigate partialling out in more detail in this example. We
+can first try to use OLS for partialling out:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" tabindex="-1"></a><span class="co"># parialling out by linear model</span></span>
+<span id="cb61-2"><a href="#cb61-2" tabindex="-1"></a>fmla.y <span class="ot">=</span> GDP <span class="sc">~</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span> Samer)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb61-3"><a href="#cb61-3" tabindex="-1"></a>fmla.d <span class="ot">=</span> Exprop <span class="sc">~</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span> Samer)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb61-4"><a href="#cb61-4" tabindex="-1"></a>fmla.z <span class="ot">=</span> logMort <span class="sc">~</span> (Latitude <span class="sc">+</span> Latitude2 <span class="sc">+</span> Africa <span class="sc">+</span> Asia <span class="sc">+</span> Namer <span class="sc">+</span> Samer)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb61-5"><a href="#cb61-5" tabindex="-1"></a>rY <span class="ot">=</span> <span class="fu">lm</span>(fmla.y, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb61-6"><a href="#cb61-6" tabindex="-1"></a>rD <span class="ot">=</span> <span class="fu">lm</span>(fmla.d, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb61-7"><a href="#cb61-7" tabindex="-1"></a>rZ <span class="ot">=</span> <span class="fu">lm</span>(fmla.z, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb61-8"><a href="#cb61-8" tabindex="-1"></a><span class="co"># ivfit.lm = tsls(y=rY,d=rD, x=NULL, z=rZ, intercept=FALSE)</span></span>
+<span id="cb61-9"><a href="#cb61-9" tabindex="-1"></a>ivfit.lm <span class="ot">=</span> <span class="fu">tsls</span>(rY <span class="sc">~</span> rD <span class="sc">|</span> rZ, <span class="at">intercept =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb61-10"><a href="#cb61-10" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">cbind</span>(ivfit.lm<span class="sc">$</span>coef, ivfit.lm<span class="sc">$</span>se), <span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div>
+<pre><code>##    [,1] [,2]
+## rD 1.27 1.73</code></pre>
+<p>We see that the estimates exhibit large standard errors. The
+imprecision is expected because dimension of <span class="math inline">\(x\)</span> is quite large, comparable to the
+sample size.</p>
+<p>Next, we replace the OLS operator by post-Lasso for partialling
+out</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" tabindex="-1"></a><span class="co"># parialling out by lasso</span></span>
+<span id="cb63-2"><a href="#cb63-2" tabindex="-1"></a>rY <span class="ot">=</span> <span class="fu">rlasso</span>(fmla.y, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb63-3"><a href="#cb63-3" tabindex="-1"></a>rD <span class="ot">=</span> <span class="fu">rlasso</span>(fmla.d, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb63-4"><a href="#cb63-4" tabindex="-1"></a>rZ <span class="ot">=</span> <span class="fu">rlasso</span>(fmla.z, <span class="at">data =</span> AJR)<span class="sc">$</span>res</span>
+<span id="cb63-5"><a href="#cb63-5" tabindex="-1"></a><span class="co"># ivfit.lasso = tsls(y=rY,d=rD, x=NULL, z=rZ, intercept=FALSE)</span></span>
+<span id="cb63-6"><a href="#cb63-6" tabindex="-1"></a>ivfit.lasso <span class="ot">=</span> <span class="fu">tsls</span>(rY <span class="sc">~</span> rD <span class="sc">|</span> rZ, <span class="at">intercept =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb63-7"><a href="#cb63-7" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">cbind</span>(ivfit.lasso<span class="sc">$</span>coef, ivfit.lasso<span class="sc">$</span>se), <span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div>
+<pre><code>##     [,1] [,2]
+## rD 0.845 0.27</code></pre>
+<p>This is exactly what command <code>rlassoIV</code> is doing by
+calling the command <code>rlassoSelectX</code>, so the numbers we see
+are identical to those reported first. In comparison to OLS results, we
+see precision is improved by doing selection on the exogenous
+variables.</p>
+</div>
+<div id="application-impact-of-eminent-domain-decisions-on-economic" class="section level3">
+<h3>Application: Impact of Eminent Domain Decisions on Economic</h3>
+<p>Here we investigate the effect of pro-plaintiff decisions in cases of
+eminent domain (government’s takings of private property) on economic
+outcomes. The analysis of the effects of such decisions is complicated
+by the possible endogeneity between judicial decisions and potential
+economic outcomes. To address the potential endogeneity, we employ an
+instrumental variables strategy based on the random assignment of judges
+to the federal appellate panels that make the decisions. Because judges
+are randomly assigned to three-judge panels, the exact identity of the
+judges and their demographics are randomly assigned conditional on the
+distribution of characteristics of federal circuit court judges in a
+given circuit-year. Under this random assignment, the characteristics of
+judges serving on federal appellate panels can only be related to
+property prices through the judges’ decisions; thus the judge’s
+characteristics will plausibly satisfy the instrumental variable
+exclusion restriction. For further information on this application and
+the data set we refer to <span class="citation">Chen and Yeh
+(2010)</span> and <span class="citation">Alexandre Belloni et al.
+(2012)</span>.</p>
+<p>First, we load the data an construct the matrices with the controls
+(x), instruments (z), outcome (y), and treatment variables (d). Here we
+consider regional GDP as the outcome variable.</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" tabindex="-1"></a><span class="fu">data</span>(EminentDomain)</span>
+<span id="cb65-2"><a href="#cb65-2" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(EminentDomain<span class="sc">$</span>logGDP<span class="sc">$</span>z)</span>
+<span id="cb65-3"><a href="#cb65-3" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(EminentDomain<span class="sc">$</span>logGDP<span class="sc">$</span>x)</span>
+<span id="cb65-4"><a href="#cb65-4" tabindex="-1"></a>y <span class="ot">&lt;-</span> EminentDomain<span class="sc">$</span>logGDP<span class="sc">$</span>y</span>
+<span id="cb65-5"><a href="#cb65-5" tabindex="-1"></a>d <span class="ot">&lt;-</span> EminentDomain<span class="sc">$</span>logGDP<span class="sc">$</span>d</span>
+<span id="cb65-6"><a href="#cb65-6" tabindex="-1"></a>x <span class="ot">&lt;-</span> x[, <span class="fu">apply</span>(x, <span class="dv">2</span>, mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">&gt;</span> <span class="fl">0.05</span>]  <span class="co">#</span></span>
+<span id="cb65-7"><a href="#cb65-7" tabindex="-1"></a>z <span class="ot">&lt;-</span> z[, <span class="fu">apply</span>(z, <span class="dv">2</span>, mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">&gt;</span> <span class="fl">0.05</span>]  <span class="co"># </span></span></code></pre></div>
+<p>As mentioned above, <span class="math inline">\(y\)</span> is the
+economic outcome, the logarithm of the GDP, <span class="math inline">\(d\)</span> the number of pro plaintiff appellate
+takings decisions in federal circuit court <span class="math inline">\(c\)</span> and year <span class="math inline">\(t\)</span>, <span class="math inline">\(x\)</span>
+is a matrix with control variables, and <span class="math inline">\(z\)</span> is the matrix with instruments. Here we
+consider socio-economic and demographic characteristics of the judges as
+instruments.</p>
+<p>First, we estimate the effect of the treatment variable by simple OLS
+and 2SLS using two instruments:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" tabindex="-1"></a>ED.ols <span class="ot">=</span> <span class="fu">lm</span>(y <span class="sc">~</span> <span class="fu">cbind</span>(d, x))</span>
+<span id="cb66-2"><a href="#cb66-2" tabindex="-1"></a>ED<span class="fl">.2</span>sls <span class="ot">=</span> <span class="fu">tsls</span>(<span class="at">y =</span> y, <span class="at">d =</span> d, <span class="at">x =</span> x, <span class="at">z =</span> z[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="at">intercept =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<p>Next, we estimate the model with selection on the instruments.</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" tabindex="-1"></a>lasso.IV.Z <span class="ot">=</span> <span class="fu">rlassoIV</span>(<span class="at">x =</span> x, <span class="at">d =</span> d, <span class="at">y =</span> y, <span class="at">z =</span> z, <span class="at">select.X =</span> <span class="cn">FALSE</span>, <span class="at">select.Z =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb67-2"><a href="#cb67-2" tabindex="-1"></a><span class="co"># or lasso.IV.Z = rlassoIVselectZt(x=X, d=d, y=y, z=z)</span></span>
+<span id="cb67-3"><a href="#cb67-3" tabindex="-1"></a><span class="fu">summary</span>(lasso.IV.Z)</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables in the IV regression model&quot;
+##    coeff.    se. t-value p-value
+## d1 0.4146 0.2902   1.428   0.153</code></pre>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" tabindex="-1"></a><span class="fu">confint</span>(lasso.IV.Z)</span></code></pre></div>
+<pre><code>##         2.5 %    97.5 %
+## d1 -0.1542764 0.9834796</code></pre>
+<p>Finally, we do selection on both the <span class="math inline">\(x\)</span> and <span class="math inline">\(z\)</span> variables.</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" tabindex="-1"></a>lasso.IV.XZ <span class="ot">=</span> <span class="fu">rlassoIV</span>(<span class="at">x =</span> x, <span class="at">d =</span> d, <span class="at">y =</span> y, <span class="at">z =</span> z, <span class="at">select.X =</span> <span class="cn">TRUE</span>, <span class="at">select.Z =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb71-2"><a href="#cb71-2" tabindex="-1"></a><span class="fu">summary</span>(lasso.IV.XZ)</span></code></pre></div>
+<pre><code>## Estimates and Significance Testing of the effect of target variables in the IV regression model 
+##      coeff.      se. t-value p-value
+## d1 -0.02383  0.12851  -0.185   0.853</code></pre>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" tabindex="-1"></a><span class="fu">confint</span>(lasso.IV.XZ)</span></code></pre></div>
+<pre><code>##         2.5 %    97.5 %
+## d1 -0.2757029 0.2280335</code></pre>
+<p>Comparing the results we see, that the OLS estimates indicate that
+the influence of pro plaintiff appellate takings decisions in federal
+circuit court is significantly positive, but the 2SLS estimates which
+account for the potential endogeneity render the results insignificant.
+Employing selection on the instruments yields similar results. Doing
+selection on both the <span class="math inline">\(x\)</span>- and <span class="math inline">\(z\)</span>-variables results in extremely
+imprecise estimates.</p>
+<p>Finally, we compare all results</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" tabindex="-1"></a>table <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">2</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" tabindex="-1"></a>table[<span class="dv">1</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(ED.ols)<span class="sc">$</span>coef[<span class="dv">2</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb75-3"><a href="#cb75-3" tabindex="-1"></a>table[<span class="dv">2</span>, ] <span class="ot">=</span> <span class="fu">cbind</span>(ED<span class="fl">.2</span>sls<span class="sc">$</span>coef[<span class="dv">1</span>], ED<span class="fl">.2</span>sls<span class="sc">$</span>se[<span class="dv">1</span>])</span>
+<span id="cb75-4"><a href="#cb75-4" tabindex="-1"></a>table[<span class="dv">3</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(lasso.IV.Z)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## [1] &quot;Estimates and significance testing of the effect of target variables in the IV regression model&quot;
+##    coeff.    se. t-value p-value
+## d1 0.4146 0.2902   1.428   0.153</code></pre>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" tabindex="-1"></a>table[<span class="dv">4</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(lasso.IV.XZ)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## Estimates and Significance Testing of the effect of target variables in the IV regression model 
+##      coeff.      se. t-value p-value
+## d1 -0.02383  0.12851  -0.185   0.853</code></pre>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" tabindex="-1"></a><span class="fu">colnames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Estimate&quot;</span>, <span class="st">&quot;Std. Error&quot;</span>)</span>
+<span id="cb79-2"><a href="#cb79-2" tabindex="-1"></a><span class="fu">rownames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;ols regression&quot;</span>, <span class="st">&quot;IV estimation &quot;</span>, <span class="st">&quot;selection on Z&quot;</span>, <span class="st">&quot;selection on X and Z&quot;</span>)</span>
+<span id="cb79-3"><a href="#cb79-3" tabindex="-1"></a><span class="fu">kable</span>(table)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Estimate</th>
+<th align="right">Std. Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ols regression</td>
+<td align="right">0.0078647</td>
+<td align="right">0.0098659</td>
+</tr>
+<tr class="even">
+<td align="left">IV estimation</td>
+<td align="right">-0.0107333</td>
+<td align="right">0.0337664</td>
+</tr>
+<tr class="odd">
+<td align="left">selection on Z</td>
+<td align="right">0.4146016</td>
+<td align="right">0.2902492</td>
+</tr>
+<tr class="even">
+<td align="left">selection on X and Z</td>
+<td align="right">-0.0238347</td>
+<td align="right">0.1285065</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="inference-on-treatment-effects-in-a-high-dimensional-setting" class="section level2">
+<h2>Inference on Treatment Effects in a High-Dimensional Setting</h2>
+<p>In this section, we consider estimation and inference on treatment
+effects when the treatment variable <span class="math inline">\(d\)</span> enters non-separably in determination
+of the outcomes. This case is more complicated than the additive case,
+which is covered as a special case of Section 3. However, the same
+underlying principle – the orthogonality principle – applies for the
+estimation and inference on the treatment effect parameters. Estimation
+and inference of treatment effects in a high-dimensional setting is
+analysed in <span class="citation">Alexandre Belloni et al.
+(2013)</span>.</p>
+<div id="treatment-effects-parameters-a-short-introduction" class="section level3">
+<h3>Treatment Effects Parameters – a short Introduction</h3>
+<p>In many situations researchers are asked to evaluate the effect of a
+policy intervention. Examples are the effectiveness of a job-related
+training program or the effect of a newly developed drug. We consider
+<span class="math inline">\(n\)</span> units or individuals, <span class="math inline">\(i=1,\ldots,n\)</span>. For each individual we
+observe the treatment status. The treatment variable <span class="math inline">\(D_i\)</span> takes the value <span class="math inline">\(1\)</span>, if the unit received (active)
+treatment, and <span class="math inline">\(0\)</span>, if it received
+the control treatment. For each individual we observe the outcome for
+only one of the two potential treatment states. Hence, the observed
+outcome depends on the treatment status and is denoted by <span class="math inline">\(Y_i(D_i)\)</span>.</p>
+<p>One important parameter of interest is the average treatment effect
+(ATE): <span class="math display">\[ \mathbb{E}[Y(1)-Y(0)]
+=  \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)]. \]</span> This quantity can be
+interpreted as the average effect of the policy intervention.</p>
+<p>Researchers might also be interested in the average treatment effect
+on the treated (ATET) given by <span class="math display">\[
+\mathbb{E}[Y(1)-Y(0)|D=1] =  \mathbb{E}[Y(1)|D=1] -
+\mathbb{E}[Y(0)|D=1]. \]</span> This is the average treatment effect
+restricted to the population the treated individuals.</p>
+<p>When treatment <span class="math inline">\(D\)</span> is randomly
+assigned conditional on confounding factors <span class="math inline">\(X\)</span>, the ATE and ATET can be identified by
+regression or propensity score weighting methods. Our identification and
+estimation method rely on the combination of two methods to create
+orthogonal estimating equations for these parameters.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>In observational studies, the potential treatments are endogenous,
+i.e. jointly determined with the outcome variable. In such cases, causal
+effects may be identified with the use of a binary instrument <span class="math inline">\(Z\)</span> that affects the treatment but is
+independent of the potential outcomes. An important parameter in this
+case is the local average treatment effect (LATE): <span class="math display">\[  \mathbb{E}[Y(1)-Y(0)| D(1) &gt; D(0)].
+\]</span></p>
+<p>The random variables <span class="math inline">\(D(1)\)</span> and
+<span class="math inline">\(D(0)\)</span> indicate the potential
+participation decisions under the instrument states <span class="math inline">\(1\)</span> and <span class="math inline">\(0\)</span>. LATE is the average treatment effect
+for the subpopulation of compliers – those units that respond to the
+change in the instrument. Another parameter of interest is the local
+average treatment effect of the treated (LATET):</p>
+<p><span class="math display">\[  \mathbb{E}[Y(1)-Y(0)| D(1) &gt; D(0),
+D=1], \]</span></p>
+<p>which is the average effect for the subpopulation of the treated
+compliers.</p>
+<p>When the instrument <span class="math inline">\(Z\)</span> is
+randomly assigned conditional on confounding factors <span class="math inline">\(X\)</span>, the LATE and LATET can be identified
+by instrumental variables regression or propensity score weighting
+methods. Our identification and estimation method rely on the
+combination of two methods to create orthogonal estimating equations for
+these parameters.</p>
+</div>
+<div id="estimation-and-inference-of-treatment-effects" class="section level3">
+<h3>Estimation and Inference of Treatment effects</h3>
+<p>We consider the estimation of the effect of an endogenous binary
+treatment, <span class="math inline">\(D\)</span>, on an outcome
+variable, <span class="math inline">\(Y\)</span>, in a setting with very
+many potential control variables. In the case of endogeneity, the
+presence of a binary instrumental variable, <span class="math inline">\(Z\)</span>, is required for the estimation of the
+LATE and LATET.</p>
+<p>When trying to estimate treatment effects, the researcher has to
+decide what conditioning variables to include. In the case of a
+non-randomly assigned treatment or instrumental variable, the researcher
+must select the conditioning variables so that the instrument or
+treatment is plausibly exogenous. Even in the case of random assignment,
+for a precise estimation of the policy variable selection of control
+variables is necessary to absorb residual variation, but overfitting
+should be avoided. For uniformly valid post-selection inference, ”
+orthogonal ” estimating equations as described above are they key to the
+efficient estimation and valid inference. We refer to <span class="citation">Alexandre Belloni et al. (2013)</span> for details.</p>
+<p>The package contains the functions <code>rlassoATE</code>,
+<code>rlassoATET</code>, <code>rlassoLATE</code> and
+<code>rlassoLATET</code> to estimate the corresponding treatment
+effects. All functions have as arguments the outcome variable <span class="math inline">\(y\)</span>, the treatment variable <span class="math inline">\(d\)</span>, and the conditioning variables <span class="math inline">\(x\)</span>. The functions <code>rlassoATE</code>,
+and <code>rlassoATE</code> have additionally the argument <span class="math inline">\(z\)</span> for the binary instrumental variable.
+For the calculation of the standard errors bootstrap methods are
+implemented, with options to use <code>Bayes</code>,
+<code>normal</code>, or <code>wild</code> bootstrap. The number of
+repetitions can be specified with the argument <code>nRep</code> and the
+default is set to <span class="math inline">\(500\)</span>. By default
+no bootstrap standard errors are provided
+(<code>bootstrap=&quot;none&quot;</code>). For the functions the logicals
+<code>intercept</code> and <code>post</code> can be specified to include
+an intercept and to do Post-Lasso at the selection steps. The family of
+treatment functions returns an object of class <code>rlassoTE</code> for
+which the methods <code>print</code>, <code>summary</code>, and
+<code>confint</code> are available.</p>
+</div>
+<div id="application-401k-plan-participation" class="section level3">
+<h3>Application: 401(k) plan participation</h3>
+<p>Though it is clear that 401(k) plans are widely used as vehicles for
+retirement saving, their effect on assets is less clear. The key problem
+in determining the effect of participation in 401(k) plans on
+accumulated assets is saver heterogeneity coupled with nonrandom
+selection into participation states. In particular, it is generally
+recognized that some people have a higher preference for saving than
+others. Thus, it seems likely that those individuals with the highest
+unobserved preference for saving would be most likely to choose to
+participate in tax-advantaged retirement savings plans and would also
+have higher savings in other assets than individuals with lower
+unobserved saving propensity. This implies that conventional estimates
+that do not allow for saver heterogeneity and selection of the
+participation state will be biased upward, tending to overstate the
+actual savings effects of 401(k) and IRA participation.</p>
+<p>Again, we start first with the data preparation:</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" tabindex="-1"></a><span class="fu">data</span>(pension)</span>
+<span id="cb80-2"><a href="#cb80-2" tabindex="-1"></a>y <span class="ot">=</span> pension<span class="sc">$</span>tw</span>
+<span id="cb80-3"><a href="#cb80-3" tabindex="-1"></a>d <span class="ot">=</span> pension<span class="sc">$</span>p401</span>
+<span id="cb80-4"><a href="#cb80-4" tabindex="-1"></a>z <span class="ot">=</span> pension<span class="sc">$</span>e401</span>
+<span id="cb80-5"><a href="#cb80-5" tabindex="-1"></a>X <span class="ot">=</span> pension[, <span class="fu">c</span>(<span class="st">&quot;i2&quot;</span>, <span class="st">&quot;i3&quot;</span>, <span class="st">&quot;i4&quot;</span>, <span class="st">&quot;i5&quot;</span>, <span class="st">&quot;i6&quot;</span>, <span class="st">&quot;i7&quot;</span>, <span class="st">&quot;a2&quot;</span>, <span class="st">&quot;a3&quot;</span>, <span class="st">&quot;a4&quot;</span>, <span class="st">&quot;a5&quot;</span>, <span class="st">&quot;fsize&quot;</span>,</span>
+<span id="cb80-6"><a href="#cb80-6" tabindex="-1"></a>    <span class="st">&quot;hs&quot;</span>, <span class="st">&quot;smcol&quot;</span>, <span class="st">&quot;col&quot;</span>, <span class="st">&quot;marr&quot;</span>, <span class="st">&quot;twoearn&quot;</span>, <span class="st">&quot;db&quot;</span>, <span class="st">&quot;pira&quot;</span>, <span class="st">&quot;hown&quot;</span>)]  <span class="co"># simple model</span></span>
+<span id="cb80-7"><a href="#cb80-7" tabindex="-1"></a>xvar <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;i2&quot;</span>, <span class="st">&quot;i3&quot;</span>, <span class="st">&quot;i4&quot;</span>, <span class="st">&quot;i5&quot;</span>, <span class="st">&quot;i6&quot;</span>, <span class="st">&quot;i7&quot;</span>, <span class="st">&quot;a2&quot;</span>, <span class="st">&quot;a3&quot;</span>, <span class="st">&quot;a4&quot;</span>, <span class="st">&quot;a5&quot;</span>, <span class="st">&quot;fsize&quot;</span>, <span class="st">&quot;hs&quot;</span>,</span>
+<span id="cb80-8"><a href="#cb80-8" tabindex="-1"></a>    <span class="st">&quot;smcol&quot;</span>, <span class="st">&quot;col&quot;</span>, <span class="st">&quot;marr&quot;</span>, <span class="st">&quot;twoearn&quot;</span>, <span class="st">&quot;db&quot;</span>, <span class="st">&quot;pira&quot;</span>, <span class="st">&quot;hown&quot;</span>)</span>
+<span id="cb80-9"><a href="#cb80-9" tabindex="-1"></a>xpart <span class="ot">=</span> <span class="fu">paste</span>(xvar, <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)</span>
+<span id="cb80-10"><a href="#cb80-10" tabindex="-1"></a>form <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;tw ~ &quot;</span>, <span class="fu">paste</span>(<span class="fu">c</span>(<span class="st">&quot;p401&quot;</span>, xvar), <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>), <span class="st">&quot;|&quot;</span>, <span class="fu">paste</span>(xvar,</span>
+<span id="cb80-11"><a href="#cb80-11" tabindex="-1"></a>    <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span>
+<span id="cb80-12"><a href="#cb80-12" tabindex="-1"></a>formZ <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot;tw ~ &quot;</span>, <span class="fu">paste</span>(<span class="fu">c</span>(<span class="st">&quot;p401&quot;</span>, xvar), <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>), <span class="st">&quot;|&quot;</span>, <span class="fu">paste</span>(<span class="fu">c</span>(<span class="st">&quot;e401&quot;</span>,</span>
+<span id="cb80-13"><a href="#cb80-13" tabindex="-1"></a>    xvar), <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>)))</span></code></pre></div>
+<p>Now we can compute the estimates of the target treatment effect
+parameters. For ATE and ATET we report the the effect of eligibility for
+401(k).</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" tabindex="-1"></a><span class="co"># pension.ate = rlassoATE(X,d,y)</span></span>
+<span id="cb81-2"><a href="#cb81-2" tabindex="-1"></a>pension.ate <span class="ot">=</span> <span class="fu">rlassoATE</span>(form, <span class="at">data =</span> pension)</span>
+<span id="cb81-3"><a href="#cb81-3" tabindex="-1"></a><span class="fu">summary</span>(pension.ate)</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: ATE 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value  p-value    
+## TE  10180  1931   5.273 1.34e-07 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" tabindex="-1"></a><span class="co"># pension.atet = rlassoATET(X,d,y)</span></span>
+<span id="cb83-2"><a href="#cb83-2" tabindex="-1"></a>pension.atet <span class="ot">=</span> <span class="fu">rlassoATET</span>(form, <span class="at">data =</span> pension)</span>
+<span id="cb83-3"><a href="#cb83-3" tabindex="-1"></a><span class="fu">summary</span>(pension.atet)</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: ATET 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value p-value    
+## TE  12628  2944   4.289 1.8e-05 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>For LATE and LATET we estimate the effect of 401(k) participation (d)
+with plan eligibility (z) as instrument.</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" tabindex="-1"></a>pension.late <span class="ot">=</span> <span class="fu">rlassoLATE</span>(X, d, y, z, <span class="at">always_takers =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb85-2"><a href="#cb85-2" tabindex="-1"></a><span class="co"># pension.late = rlassoLATE(formZ, data=pension, always_takers = FALSE)</span></span>
+<span id="cb85-3"><a href="#cb85-3" tabindex="-1"></a><span class="fu">summary</span>(pension.late)</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: LATE 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value p-value    
+## TE  12250  2745   4.463 8.1e-06 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" tabindex="-1"></a>pension.latet <span class="ot">=</span> <span class="fu">rlassoLATET</span>(X, d, y, z, <span class="at">always_takers =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb87-2"><a href="#cb87-2" tabindex="-1"></a><span class="co"># pension.latet = rlassoLATET(formZ, data=pension, always_takers = FALSE)</span></span>
+<span id="cb87-3"><a href="#cb87-3" tabindex="-1"></a><span class="fu">summary</span>(pension.latet)</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: LATET 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value  p-value    
+## TE  15323  3645   4.204 2.63e-05 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>The results are summarized into a table.</p>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" tabindex="-1"></a>table <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">2</span>)</span>
+<span id="cb89-2"><a href="#cb89-2" tabindex="-1"></a>table[<span class="dv">1</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(pension.ate)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: ATE 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value  p-value    
+## TE  10180  1931   5.273 1.34e-07 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" tabindex="-1"></a>table[<span class="dv">2</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(pension.atet)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: ATET 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value p-value    
+## TE  12628  2944   4.289 1.8e-05 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" tabindex="-1"></a>table[<span class="dv">3</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(pension.late)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: LATE 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value p-value    
+## TE  12250  2745   4.463 8.1e-06 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" tabindex="-1"></a>table[<span class="dv">4</span>, ] <span class="ot">=</span> <span class="fu">summary</span>(pension.latet)[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>## Estimation and significance testing of the treatment effect 
+## Type: LATET 
+## Bootstrap: not applicable 
+##    coeff.   se. t-value  p-value    
+## TE  15323  3645   4.204 2.63e-05 ***
+## ---
+## Signif. codes:  
+## 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" tabindex="-1"></a><span class="fu">colnames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Estimate&quot;</span>, <span class="st">&quot;Std. Error&quot;</span>)</span>
+<span id="cb97-2"><a href="#cb97-2" tabindex="-1"></a><span class="fu">rownames</span>(table) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;ATE&quot;</span>, <span class="st">&quot;ATET &quot;</span>, <span class="st">&quot;LATE&quot;</span>, <span class="st">&quot;LATET&quot;</span>)</span>
+<span id="cb97-3"><a href="#cb97-3" tabindex="-1"></a><span class="fu">kable</span>(table)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Estimate</th>
+<th align="right">Std. Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ATE</td>
+<td align="right">10180.09</td>
+<td align="right">1930.681</td>
+</tr>
+<tr class="even">
+<td align="left">ATET</td>
+<td align="right">12628.46</td>
+<td align="right">2944.434</td>
+</tr>
+<tr class="odd">
+<td align="left">LATE</td>
+<td align="right">12249.51</td>
+<td align="right">2744.924</td>
+</tr>
+<tr class="even">
+<td align="left">LATET</td>
+<td align="right">15323.18</td>
+<td align="right">3645.280</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, we estimate a model including all interaction effects:</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" tabindex="-1"></a><span class="co"># generate all interactions of X&#39;s</span></span>
+<span id="cb98-2"><a href="#cb98-2" tabindex="-1"></a>xvar2 <span class="ot">=</span> <span class="fu">paste</span>(<span class="st">&quot;(&quot;</span>, <span class="fu">paste</span>(xvar, <span class="at">collapse =</span> <span class="st">&quot;+&quot;</span>), <span class="st">&quot;)^2&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb98-3"><a href="#cb98-3" tabindex="-1"></a></span>
+<span id="cb98-4"><a href="#cb98-4" tabindex="-1"></a><span class="co"># ATE and ATE with interactions</span></span>
+<span id="cb98-5"><a href="#cb98-5" tabindex="-1"></a>forminteract <span class="ot">=</span> <span class="fu">formula</span>(<span class="fu">paste</span>(<span class="st">&quot;tw ~&quot;</span>, xvar2, <span class="st">&quot; + p401&quot;</span>, <span class="st">&quot;|&quot;</span>, xvar2, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb98-6"><a href="#cb98-6" tabindex="-1"></a><span class="co"># LATE and LATET with interactions</span></span>
+<span id="cb98-7"><a href="#cb98-7" tabindex="-1"></a>formZinteract <span class="ot">=</span> <span class="fu">formula</span>(<span class="fu">paste</span>(<span class="st">&quot;tw ~&quot;</span>, xvar2, <span class="st">&quot; + p401&quot;</span>, <span class="st">&quot;|&quot;</span>, xvar2, <span class="st">&quot; + e401&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" tabindex="-1"></a><span class="co"># pension.ate= rlassoATE(forminteract, data = pension) summary(pension.ate)</span></span>
+<span id="cb99-2"><a href="#cb99-2" tabindex="-1"></a><span class="co"># pension.atet= rlassoATET(forminteract, data = pension) summary(pension.atet)</span></span>
+<span id="cb99-3"><a href="#cb99-3" tabindex="-1"></a><span class="co"># pension.late= rlassoLATE(formZinteract, data = pension, always_takers =</span></span>
+<span id="cb99-4"><a href="#cb99-4" tabindex="-1"></a><span class="co"># FALSE) summary(pension.late) pension.latet= rlassoLATET(formZinteract, data =</span></span>
+<span id="cb99-5"><a href="#cb99-5" tabindex="-1"></a><span class="co"># pension, always_takers = FALSE) summary(pension.latet) table= matrix(0, 4, 2)</span></span>
+<span id="cb99-6"><a href="#cb99-6" tabindex="-1"></a><span class="co"># table[1,]= summary(pension.ate)[,1:2] table[2,]= summary(pension.atet)[,1:2]</span></span>
+<span id="cb99-7"><a href="#cb99-7" tabindex="-1"></a><span class="co"># table[3,]= summary(pension.late)[,1:2] table[4,]=</span></span>
+<span id="cb99-8"><a href="#cb99-8" tabindex="-1"></a><span class="co"># summary(pension.latet)[,1:2] colnames(table)= c(&#39;Estimate&#39;, &#39;Std. Error&#39;)</span></span>
+<span id="cb99-9"><a href="#cb99-9" tabindex="-1"></a><span class="co"># rownames(table)= c(&#39;ATE&#39;, &#39;ATET &#39;, &#39;LATE&#39;, &#39;LATET&#39;) tab= xtable(table,</span></span>
+<span id="cb99-10"><a href="#cb99-10" tabindex="-1"></a><span class="co"># digits=c(2, 2,2))</span></span></code></pre></div>
+</div>
+</div>
+<div id="the-lasso-methods-for-discovery-of-significant" class="section level2">
+<h2>The Lasso Methods for Discovery of Significant</h2>
+<p>Causes amongst Many Potential Causes, with Many Controls</p>
+<p>Here we consider the model <span class="math display">\[
+\underbrace{Y_{i}}_{\mathrm{Outcome}} \ \ =  \ \
+\underbrace{\sum_{l=1}^{p_1} D_{il} \alpha_\ell}_{
+\mathrm{Causes}} \ \ + \ \ \underbrace{\sum_{j=1}^{p_2}
+W_{ij} \beta_j}_{\mathrm{Controls}} \ \ + \ \
+\underbrace{\epsilon_i}_{\mathrm{Noise}}
+\]</span></p>
+<p>where the number of potential causes <span class="math inline">\(p_1\)</span> could be very large and the number of
+controls <span class="math inline">\(p_2\)</span> could also be very
+large. The causes are randomly assigned conditional on controls.</p>
+<p>Under approximate sparsity of $ = (<em>l)</em>{l=1}^{p_1}$ and <span class="math inline">\(\beta = (\beta_l)_{l=1}^{p_2}\)</span>, we can use
+Lasso-based method of <span class="citation">A. Belloni, Chernozhukov,
+and Kato (2014)</span> for estimating <span class="math inline">\((\alpha_l)_{l=1}^{p_1}\)</span> and constructing a
+joint confidence band on <span class="math inline">\((\alpha_l)_{l=1}^{p_1}\)</span> and then checking
+which <span class="math inline">\(\alpha_l\)</span>’s are significantly
+different from zero. The approach is based on building orthogonal
+estimating equations for each of <span class="math inline">\((\alpha_l)_{l=1}^{p_1}\)</span>, and can be
+interpreted as doing Frisch-Waugh procedure for each coefficient of
+interest, where we do partialling out via Lasso or OLS-after-Lasso.</p>
+<p>This procedure is implemented in the R package <code>hdm</code>. Here
+is an example in which <span class="math inline">\(n=100\)</span>, <span class="math inline">\(p_1=20\)</span>, and <span class="math inline">\(p_2=20\)</span>, so that total number of
+regressors is <span class="math inline">\(p = p_1 + p_2 = 40\)</span>.
+In this example <span class="math inline">\(\alpha_1 =5\)</span> and
+<span class="math inline">\(\beta_1 = 5\)</span>, i.e. there is only one
+true cause <span class="math inline">\(D_{i1}\)</span>, among the large
+number of causes, <span class="math inline">\(D_{i1},...,
+D_{i20}\)</span>, and only one true control <span class="math inline">\(W_{i1}\)</span>. This example is made super-simple
+for clarity sake. The <span class="citation">A. Belloni, Chernozhukov,
+and Kato (2014)</span> procedure, implemented by
+<code>rlassoEffects</code> command in R package <code>hdm</code>.</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" tabindex="-1"></a><span class="co"># library(hdm) library(stats)</span></span>
+<span id="cb100-2"><a href="#cb100-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb100-3"><a href="#cb100-3" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb100-4"><a href="#cb100-4" tabindex="-1"></a>p1 <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb100-5"><a href="#cb100-5" tabindex="-1"></a>p2 <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb100-6"><a href="#cb100-6" tabindex="-1"></a>D <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p1), n, p1)  <span class="co"># Causes</span></span>
+<span id="cb100-7"><a href="#cb100-7" tabindex="-1"></a>W <span class="ot">=</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p2), n, p2)  <span class="co"># Controls</span></span>
+<span id="cb100-8"><a href="#cb100-8" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(D, W)  <span class="co"># Regressors</span></span>
+<span id="cb100-9"><a href="#cb100-9" tabindex="-1"></a>Y <span class="ot">=</span> D[, <span class="dv">1</span>] <span class="sc">*</span> <span class="dv">5</span> <span class="sc">+</span> W[, <span class="dv">1</span>] <span class="sc">*</span> <span class="dv">5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n)  <span class="co">#Outcome</span></span>
+<span id="cb100-10"><a href="#cb100-10" tabindex="-1"></a><span class="fu">confint</span>(<span class="fu">rlassoEffects</span>(X, Y, <span class="at">index =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span>p1)), <span class="at">joint =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>##           2.5 %     97.5 %
+## V1   4.50866432 5.22022841
+## V2  -0.31953305 0.31018863
+## V3  -0.35697552 0.19135337
+## V4  -0.25882821 0.29197430
+## V5  -0.28126033 0.28095191
+## V6  -0.32667970 0.29943897
+## V7  -0.23071362 0.30540460
+## V8  -0.05176475 0.47807437
+## V9  -0.19144642 0.39511806
+## V10 -0.24147977 0.26835598
+## V11 -0.31914646 0.21389604
+## V12 -0.31405744 0.27058865
+## V13 -0.17881932 0.38148895
+## V14 -0.32957544 0.39143367
+## V15 -0.32735277 0.31850128
+## V16 -0.26999556 0.33605206
+## V17 -0.18425482 0.42200853
+## V18 -0.37284876 0.05048331
+## V19 -0.11155211 0.39792894
+## V20 -0.21970679 0.25942695</code></pre>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" tabindex="-1"></a><span class="co"># BCK Joint Confidence Band for Reg Coefficients 1 to 20</span></span></code></pre></div>
+<p>As you can see the procedure correctly tells that only the first
+cause <span class="math inline">\(D_{i1}\)</span>, among the large
+number of causes, <span class="math inline">\(D_{i1},...,
+D_{i20}\)</span>, is a statistically significant cause of <span class="math inline">\(Y\)</span> (see the confidence interval for
+variable V1).</p>
+</div>
+<div id="methods-for-valid-simultaneous-inference-in-high-dimensional-models" class="section level2">
+<h2>Methods for Valid Simultaneous Inference in High-Dimensional
+Models</h2>
+<p>The <code>hdm</code> packages provides methods for multiple testing
+adjustment as described in <span class="citation">Bach, Chernozhukov,
+and Spindler (2018)</span>. Various methods to conduct valid
+simultaneous inference on a set of target coefficients are implemented
+in the S3 method <code>p_adjust</code>. For example, consider the
+problem of simultaneously testing 80 target coefficients in a simulated
+data example. For instance, it is possible to take the correlation
+structure among covariates into account by using the stepdown procedure
+of <span class="citation">Romano and Wolf (2005)</span>.</p>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" tabindex="-1"></a><span class="fu">library</span>(mvtnorm)</span>
+<span id="cb103-2"><a href="#cb103-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb103-3"><a href="#cb103-3" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb103-4"><a href="#cb103-4" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">80</span></span>
+<span id="cb103-5"><a href="#cb103-5" tabindex="-1"></a>s <span class="ot">=</span> <span class="dv">9</span></span>
+<span id="cb103-6"><a href="#cb103-6" tabindex="-1"></a>covar <span class="ot">=</span> <span class="fu">toeplitz</span>(<span class="fl">0.9</span><span class="sc">^</span>(<span class="dv">0</span><span class="sc">:</span>(p <span class="sc">-</span> <span class="dv">1</span>)))</span>
+<span id="cb103-7"><a href="#cb103-7" tabindex="-1"></a><span class="fu">diag</span>(covar) <span class="ot">=</span> <span class="fu">rep</span>(<span class="dv">1</span>, p)</span>
+<span id="cb103-8"><a href="#cb103-8" tabindex="-1"></a>mu <span class="ot">=</span> <span class="fu">rep</span>(<span class="dv">0</span>, p)</span>
+<span id="cb103-9"><a href="#cb103-9" tabindex="-1"></a>X <span class="ot">=</span> mvtnorm<span class="sc">::</span><span class="fu">rmvnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> mu, <span class="at">sigma =</span> covar)  <span class="co"># Regressors</span></span>
+<span id="cb103-10"><a href="#cb103-10" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(s<span class="sc">:</span><span class="dv">1</span>, <span class="fu">rep</span>(<span class="dv">0</span>, p <span class="sc">-</span> s))</span>
+<span id="cb103-11"><a href="#cb103-11" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">sd =</span> <span class="dv">5</span>)  <span class="co">#Outcome</span></span>
+<span id="cb103-12"><a href="#cb103-12" tabindex="-1"></a><span class="co"># Estimate rlassoEffects</span></span>
+<span id="cb103-13"><a href="#cb103-13" tabindex="-1"></a>rl <span class="ot">=</span> <span class="fu">rlassoEffects</span>(X, Y, <span class="at">index =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span>p))</span>
+<span id="cb103-14"><a href="#cb103-14" tabindex="-1"></a></span>
+<span id="cb103-15"><a href="#cb103-15" tabindex="-1"></a><span class="co"># unadjusted</span></span>
+<span id="cb103-16"><a href="#cb103-16" tabindex="-1"></a>p.unadj <span class="ot">=</span> <span class="fu">p_adjust</span>(rl, <span class="at">method =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb103-17"><a href="#cb103-17" tabindex="-1"></a><span class="co"># Number of rejections at a prespecified significance level</span></span>
+<span id="cb103-18"><a href="#cb103-18" tabindex="-1"></a><span class="fu">sum</span>(p.unadj[, <span class="dv">2</span>] <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span></code></pre></div>
+<pre><code>## [1] 12</code></pre>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" tabindex="-1"></a><span class="co"># Romano-Wolf Stepdown Correction</span></span>
+<span id="cb105-2"><a href="#cb105-2" tabindex="-1"></a>p.rw <span class="ot">=</span> <span class="fu">p_adjust</span>(rl, <span class="at">method =</span> <span class="st">&quot;RW&quot;</span>, <span class="at">B =</span> <span class="dv">1000</span>)</span>
+<span id="cb105-3"><a href="#cb105-3" tabindex="-1"></a><span class="co"># Number of rejections at a prespecified significance level (5%)</span></span>
+<span id="cb105-4"><a href="#cb105-4" tabindex="-1"></a><span class="fu">sum</span>(p.rw[, <span class="dv">2</span>] <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span></code></pre></div>
+<pre><code>## [1] 6</code></pre>
+<p>More methods to adjust for multiple testing as provided by the
+<code>p.adjust()</code> command from the R base package are available,
+for instance the Bonferroni adjustment or FDR-controlling methods like
+the Benjamini-Hochberg correction.</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" tabindex="-1"></a><span class="co"># Adjust with Bonferroni correction</span></span>
+<span id="cb107-2"><a href="#cb107-2" tabindex="-1"></a>p.bonf <span class="ot">=</span> <span class="fu">p_adjust</span>(rl, <span class="at">method =</span> <span class="st">&quot;bonferroni&quot;</span>)</span>
+<span id="cb107-3"><a href="#cb107-3" tabindex="-1"></a><span class="co"># Number of rejections at a prespecified significance level</span></span>
+<span id="cb107-4"><a href="#cb107-4" tabindex="-1"></a><span class="fu">sum</span>(p.bonf[, <span class="dv">2</span>] <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span></code></pre></div>
+<pre><code>## [1] 5</code></pre>
+<div class="sourceCode" id="cb109"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" tabindex="-1"></a><span class="co"># Romano-Wolf Stepdown Correction</span></span>
+<span id="cb109-2"><a href="#cb109-2" tabindex="-1"></a>p.bh <span class="ot">=</span> <span class="fu">p_adjust</span>(rl, <span class="at">method =</span> <span class="st">&quot;BH&quot;</span>)</span>
+<span id="cb109-3"><a href="#cb109-3" tabindex="-1"></a><span class="co"># Number of rejections at a prespecified significance level</span></span>
+<span id="cb109-4"><a href="#cb109-4" tabindex="-1"></a><span class="fu">sum</span>(p.bh[, <span class="dv">2</span>] <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span></code></pre></div>
+<pre><code>## [1] 10</code></pre>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>We have provided an introduction to some of the capabilities of the
+<code>R</code> package <code>hdm</code>. Inevitably, new applications
+will demand new features and, as the project is in its initial phase,
+unforeseen bugs will show up. In either case comments and suggestions of
+users are highly appreciated. We shall update the documentation and the
+package periodically. The most current version of the <code>R</code>
+package and its accompanying vignette will be made available at the
+homepage of the maintainer and <code>https://cran.r-project.org/</code>.
+See the <code>R</code> command <code>vignette()</code> for details on
+how to find and view vignettes from within <code>R</code>.</p>
+<div style="page-break-after: always;"></div>
+</div>
+<div id="appendix" class="section level2">
+<h2>Appendix</h2>
+</div>
+<div id="data-sets" class="section level2">
+<h2>Data Sets</h2>
+<p>In this section we describe briefly the data sets which are contained
+in the package and used afterwards. They might also be of general
+interest either for illustrating methods or for classroom
+presentation.</p>
+<div id="pension-data" class="section level3">
+<h3>Pension Data</h3>
+<p>In the United States 401(k) plans were introduced to increase private
+individual saving for retirement. They allow the individual to deduct
+contributions from taxable income and allow tax-free accrual of interest
+on assets held within the plan (within an account). Employers provide
+401(k) plans, and employers may also match a certain percentage of an
+employee’s contribution. Because 401(k) plans are provided by employers,
+only workers in firms offering plans are eligible for participation.
+This data set contains individual level information about 401(k)
+participation and socio-economic characteristics.</p>
+<p>The data set can be loaded with</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" tabindex="-1"></a><span class="fu">data</span>(pension)</span></code></pre></div>
+<p>A description of the variables and further references are given in
+<span class="citation">Victor Chernozhukov and Hansen (2004)</span> and
+at the help page, for this example called by</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" tabindex="-1"></a><span class="fu">help</span>(pension)</span></code></pre></div>
+<p>The sample is drawn from the 1991 Survey of Income and Program
+Participation (SIPP) and consists of 9,915 observations. The
+observational units are household reference persons aged 25-64 and
+spouse if present. Households are included in the sample if at least one
+person is employed and no one is self-employed. All dollar amounts are
+in 1991 dollars. The 1991 SIPP reports household financial data across a
+range of asset categories. These data include a variable for whether a
+person works for a firm that offers a 401(k) plan. Households in which a
+member works for such a firm are classified as eligible for a 401(k). In
+addition, the survey also records the amount of 401(k) assets.
+Households with a positive 401(k) balance are classified as
+participants, and eligible households with a zero balance are considered
+nonparticipants. Available measures of wealth in the 1991 SIPP are total
+wealth, net financial assets, and net non-401(k) financial assets. Net
+non-401(k) assets are defined as the sum of checking accounts, U.S.
+saving bonds, other interest-earning accounts in banks and other
+financial institutions, other interest-earning assets (such as bonds
+held personally), stocks and mutual funds less non-mortgage debt, and
+IRA balances. Net financial assets are net non-401(k) financial assets
+plus 401(k) balances, and total wealth is net financial assets plus
+housing equity and the value of business, property, and motor
+vehicles.</p>
+</div>
+<div id="growth-data" class="section level3">
+<h3>Growth Data</h3>
+<p>Understanding what drives economic growth, measured in GDP, is a
+central question of macroeconomics. A well-known data set with
+information about GDP growth for many countries over a long period was
+collected by <span class="citation">Barro and Lee (1994)</span>. This
+data set can be loaded by</p>
+<div class="sourceCode" id="cb113"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" tabindex="-1"></a><span class="fu">data</span>(GrowthData)</span></code></pre></div>
+<p>This data set contains the national growth rates in GDP per capita
+(Outcome) for many countries with additional covariates. A very
+important covariate is gdpsh465, which is the initial level of
+per-capita GDP. For further information we refer to the help page and
+the references herein, in particular the online descriptions of the data
+set.</p>
+</div>
+<div id="institutions-and-economic-development-data-on-settler-mortality" class="section level3">
+<h3>Institutions and Economic Development – Data on Settler
+Mortality</h3>
+<p>This data set was collected by <span class="citation">Acemoglu,
+Johnson, and Robinson (2001)</span> to analyse the effect of
+institutions on economic development. The data can be loaded with</p>
+<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" tabindex="-1"></a><span class="fu">data</span>(AJR)</span></code></pre></div>
+<p>The data set contains measurements of GDP, settler morality, an index
+measuring protection against expropriation risk and geographic
+information (latitude and continent dummies). There are <span class="math inline">\(64\)</span> observations on 11 variables.</p>
+</div>
+<div id="data-on-eminent-domain" class="section level3">
+<h3>Data on Eminent Domain</h3>
+<p>Eminent domain refers to the government’s taking of private property.
+This data set was collected to analyse the effect of the number of
+pro-plaintiff appellate takings decisions on economic outcome variables
+such as house price indices.</p>
+<p>The data set is loaded into <code>R</code> by</p>
+<div class="sourceCode" id="cb115"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" tabindex="-1"></a><span class="fu">data</span>(EminentDomain)</span></code></pre></div>
+<p>The data set consists of four ” sub data sets” which have the
+following structure:</p>
+<ul>
+<li>y: outcome variable, a house price index or a local GDP index,</li>
+<li>d: the treatment variable, represents the number of pro-plaintiff
+appellate takings decisions in federal circuit court c and year t</li>
+<li>x: exogenous control variables that include a dummy variable for
+whether there were relevant cases in that circuit-year, the number of
+takings appellate decisions, and controls for the distribution of
+characteristics of federal circuit court judges in a given
+circuit-year</li>
+<li>z: instrumental variables, here characteristics of judges serving on
+federal appellate panels</li>
+</ul>
+<p>The four data sets differ mainly in the dependent variable, which can
+be repeat-sales FHFA/OFHEO house price index for metro (FHFA) and
+non-metro (NM) areas , the Case-Shiller home price index (CS), and
+state-level GDP from the Bureau of Economic Analysis.</p>
+</div>
+<div id="blp-data" class="section level3">
+<h3>BLP data</h3>
+<p>This data set was analyzed in the seminal contribution of <span class="citation">Berry, Levinsohn, and Pakes (1995)</span> and stems
+from annual issues of the Automotive News Market Data Book. The data set
+includes information on all models marketed during the the period
+beginning 1971 and ending in 1990 containing 2217 model/years from 997
+distinct models. A detailed description is given in <span class="citation">Berry, Levinsohn, and Pakes (1995)</span>, p. 868–871.
+The function <code>constructIV</code> constructs instrumental variables
+along the lines described and used in <span class="citation">Berry,
+Levinsohn, and Pakes (1995)</span>. The data set is loaded by</p>
+<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" tabindex="-1"></a><span class="fu">data</span>(BLP)</span></code></pre></div>
+<p>It contains information on the price (in logarithm), the market
+share, and car characteristics like miles per gallon, miles per dollar,
+horse power per weight, space and air conditioning.</p>
+</div>
+<div id="cps-data" class="section level3">
+<h3>CPS data</h3>
+<p>The CPS is a monthly U.S. household survey conducted jointly by the
+U.S. Census Bureau and the Bureau of Labor Statistics. The data were
+collected for the year 2012. The sample comprises white non-Hispanic,
+ages 25-54, working full time full year (35+ hours per week at least 50
+weeks), exclude living in group quarters, self-employed, military,
+agricultural, and private household sector, allocated earning,
+inconsistent report on earnings and employment, missing data. It can be
+inspected with the command</p>
+<div class="sourceCode" id="cb117"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" tabindex="-1"></a><span class="fu">data</span>(cps2012)</span></code></pre></div>
+</div>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-acemoglu:colonial" class="csl-entry">
+Acemoglu, Daron, Simon Johnson, and James A. Robinson. 2001. <span>“The
+Colonial Origins of Comparative Development: An Empirical
+Investigation.”</span> <em>American Economic Review</em> 91 (5):
+1369–1401.
+</div>
+<div id="ref-siminf2018" class="csl-entry">
+Bach, Philipp, Victor Chernozhukov, and Martin Spindler. 2018.
+<span>“Valid Simultaneous Inference in High-Dimensional Settings (with
+the HDM Package for r).”</span> <em>arXiv:1809.04951v1</em>.
+</div>
+<div id="ref-BarroLee1994" class="csl-entry">
+Barro, R. J., and J.-W. Lee. 1994. <span>“Data Set for a Panel of 139
+Countries.”</span> <em>NBER,
+Http://Www.nber.org/Pub/Barro.lee.html</em>.
+</div>
+<div id="ref-BC-PostLASSO" class="csl-entry">
+Belloni, A., and V. Chernozhukov. 2013. <span>“Least Squares After Model
+Selection in High-Dimensional Sparse Models.”</span> <em>Bernoulli</em>
+19 (2): 521–47.
+</div>
+<div id="ref-BCK2014" class="csl-entry">
+Belloni, A., V. Chernozhukov, and K. Kato. 2014. <span>“Uniform
+Post-Selection Inference for Least Absolute Deviation Regression and
+Other z-Estimation Problems.”</span> <em>Biometrika</em>. <a href="https://doi.org/10.1093/biomet/asu056">https://doi.org/10.1093/biomet/asu056</a>.
+</div>
+<div id="ref-BCCH12" class="csl-entry">
+Belloni, Alexandre, Daniel Chen, Victor Chernozhukov, and Christian
+Hansen. 2012. <span>“Sparse Models and Methods for Optimal Instruments
+with an Application to Eminent Domain.”</span> <em>Econometrica</em> 80:
+2369–429.
+</div>
+<div id="ref-BCFH:Policy" class="csl-entry">
+Belloni, Alexandre, Victor Chernozhukov, Ivan Fernández-Val, and
+Christian Hansen. 2013. <span>“Program Evaluation with High-Dimensional
+Data.”</span> <em>arXiv:1311.2645</em>.
+</div>
+<div id="ref-BCH2011:InferenceGauss" class="csl-entry">
+Belloni, Alexandre, Victor Chernozhukov, and Christian Hansen. 2010.
+<span>“Inference for High-Dimensional Sparse Econometric Models.”</span>
+<em>Advances in Economics and Econometrics. 10th World Congress of
+Econometric Society. August 2010</em> III: 245–95.
+</div>
+<div id="ref-BelloniChernozhukovHansen2011" class="csl-entry">
+———. 2014. <span>“Inference on Treatment Effects After Selection Amongst
+High-Dimensional Controls.”</span> <em>Review of Economic Studies</em>
+81: 608–50.
+</div>
+<div id="ref-BLP" class="csl-entry">
+Berry, Steven, James Levinsohn, and Ariel Pakes. 1995. <span>“Automobile
+Prices in Market Equilibrium.”</span> <em>Econometrica</em> 63: 841–90.
+</div>
+<div id="ref-chen:yeh:takings" class="csl-entry">
+Chen, D. L., and S. Yeh. 2010. <span>“The Economic Impacts of Eminent
+Domain.”</span>
+</div>
+<div id="ref-CCK:AOS13" class="csl-entry">
+Chernozhukov, V., D. Chetverikov, and K. Kato. 2013. <span>“Gaussian
+Approximations and Multiplier Bootstrap for Maxima of Sums of
+High-Dimensional Random Vectors.”</span> <em>Annals of Statistics</em>
+41: 2786–2819.
+</div>
+<div id="ref-CH401k" class="csl-entry">
+Chernozhukov, Victor, and Christian Hansen. 2004. <span>“The Impact of
+401(k) Participation on the Wealth Distribution: An Instrumental
+Quantile Regression Analysis.”</span> <em>Review of Economics and
+Statistics</em> 86 (3): 735–51.
+</div>
+<div id="ref-CHS:ManyIVNote" class="csl-entry">
+Chernozhukov, Victor, Christian Hansen, and Martin Spindler. 2015a.
+<span>“Valid Post-Selection and Post-Regularization Inference in Linear
+Models with Many Controls and Instruments.”</span> <em>American Economic
+Review: Papers and Proceedings</em>.
+</div>
+<div id="ref-CHS2015" class="csl-entry">
+———. 2015b. <span>“Valid Post-Selection and Post-Regularization
+Inference: An Elementary, General Approach.”</span> <em>Annual Review of
+Economics</em> 7 (1): 649–88. <a href="https://doi.org/10.1146/annurev-economics-012315-015826">https://doi.org/10.1146/annurev-economics-012315-015826</a>.
+</div>
+<div id="ref-Fu1998" class="csl-entry">
+Fu, Wenjiang J. 1998. <span>“Penalized Regressions: The Bridge Versus
+the Lasso.”</span> <em>Journal of Computational and Graphical
+Statistics</em> 7 (3): 397–416. <a href="https://doi.org/10.1080/10618600.1998.10474784">https://doi.org/10.1080/10618600.1998.10474784</a>.
+</div>
+<div id="ref-romanowolf2005" class="csl-entry">
+Romano, Joseph P, and Michael Wolf. 2005. <span>“Exact and Approximate
+Stepdown Methods for Multiple Hypothesis Testing.”</span> <em>Journal of
+the American Statistical Association</em> 100 (469): 94–108.
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>It turns out that the orthogonal estimating equations
+are the same as doubly robust estimating equations, but emphasizing the
+name “doubly robust” could be confusing in the present context.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
